@@ -32,13 +32,17 @@
     jq
     kubectl
     kubernetes-helm
-    neovim
     nixfmt
     pgcli
     ripgrep
     xclip
     (pkgs.nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
   ];
+
+  home.file.".config/nvim" = {
+    source = ./nvim;
+    recursive = true;
+  };
 
   fonts.fontconfig.enable = true;
 
@@ -151,5 +155,27 @@
     ];
     shell = "${pkgs.fish}/bin/fish";
   };
-}
 
+  programs.neovim = {
+    enable = true;
+    vimAlias = true;
+    viAlias = true;
+    plugins = with pkgs.vimPlugins; [
+      vim-devicons
+      nerdtree
+      nerdtree-git-plugin
+      lightline-vim
+      vim-gitgutter
+      fzf-vim
+      ack-vim
+      vim-fugitive
+      vim-sleuth
+      vim-sensible
+      nerdcommenter
+      elm-vim
+      ale
+      vim-nix
+      vim-monokai-pro
+    ];
+  };
+}
