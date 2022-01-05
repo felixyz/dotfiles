@@ -39,11 +39,6 @@
     (pkgs.nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
   ];
 
-  home.file.".config/nvim" = {
-    source = ./nvim;
-    recursive = true;
-  };
-
   fonts.fontconfig.enable = true;
 
   programs.git = {
@@ -177,5 +172,6 @@
       vim-nix
       vim-monokai-pro
     ];
+    extraConfig = builtins.readFile ./nvim/extra-config.vim;
   };
 }
