@@ -114,12 +114,15 @@
     };
   };
 
-# programs.alacritty = {
-#    enable = true;
-#    settings = {
-#      shell.program = "${pkgs.fish}/bin/fish";
-#    };
-#  };
+  programs.alacritty = {
+    enable = true;
+    settings = {
+      shell.program = "${pkgs.fish}/bin/fish";
+      window = {
+        startup_mode = "Maximized";
+      };
+    };
+  };
 
   programs.tmux = {
     enable = true;
