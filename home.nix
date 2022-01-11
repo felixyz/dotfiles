@@ -45,6 +45,7 @@
     enable = true;
     userName = "Felix ";
     userEmail = "felix@hinterstellar.io";
+    lfs.enable = true;
     extraConfig = {
       core = {
         editor = "nvim";
