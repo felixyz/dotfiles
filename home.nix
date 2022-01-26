@@ -87,6 +87,15 @@
            sha256 = "1c2grvkd8w4jybw5rs41w4lpq4c2yx1jcbnzfpnmc3c2445k9jlh"; #lib.fakeSha256; 
        };
    }
+   {
+       name="fish-kubectl-completions";
+       src = pkgs.fetchFromGitHub {
+           owner = "evanlucas";
+           repo = "fish-kubectl-completions";
+           rev = "ced676392575d618d8b80b3895cdc3159be3f628";
+           sha256 = "OYiYTW+g71vD9NWOcX1i2/TaQfAg+c2dJZ5ohwWSDCc="; #lib.fakeSha256; 
+       };
+   }
    ];
   
    shellInit =
