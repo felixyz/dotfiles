@@ -41,6 +41,10 @@
 
   fonts.fontconfig.enable = true;
 
+  
+  programs.direnv.enable = true;
+  programs.direnv.enableFishIntegration = true;
+
   programs.git = {
     enable = true;
     userName = "Felix ";
