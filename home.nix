@@ -41,7 +41,11 @@
 
   fonts.fontconfig.enable = true;
 
+  home.sessionVariables = {
+    EDITOR = "nvim";
+  };
   
+
   programs.direnv.enable = true;
   programs.direnv.enableFishIntegration = true;
 
