@@ -49,6 +49,13 @@
   programs.direnv.enable = true;
   programs.direnv.enableFishIntegration = true;
 
+  home.shellAliases = {
+    bux = "bundle exec";
+    cat = "bat";
+    gplease = "git push --no-verify --force-with-lease";
+    k = "kubectl";
+  };
+
   programs.git = {
     enable = true;
     userName = "Felix ";
