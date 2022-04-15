@@ -21,9 +21,11 @@
 
   home.packages = with pkgs; [
     bat
+    ctop
     diff-so-fancy
     dive
     docker_compose
+    fff
     fzf
     fontconfig
     git
@@ -32,6 +34,7 @@
     jq
     kubectl
     kubernetes-helm
+    mosh
     nixfmt
     pgcli
     ripgrep
