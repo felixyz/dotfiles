@@ -24,7 +24,6 @@
     ctop
     diff-so-fancy
     dive
-    docker_compose
     fff
     fzf
     fontconfig
