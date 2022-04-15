@@ -187,21 +187,21 @@
     vimAlias = true;
     viAlias = true;
     plugins = with pkgs.vimPlugins; [
-      vim-devicons
+      ack-vim
+      ale
+      elm-vim
+      fzf-vim
+      lightline-vim
+      nerdcommenter
       nerdtree
       nerdtree-git-plugin
-      lightline-vim
-      vim-gitgutter
-      fzf-vim
-      ack-vim
+      vim-devicons
       vim-fugitive
-      vim-sleuth
-      vim-sensible
-      nerdcommenter
-      elm-vim
-      ale
-      vim-nix
+      vim-gitgutter
       vim-monokai-pro
+      vim-nix
+      vim-sensible
+      vim-sleuth
     ];
     extraConfig = builtins.readFile ./nvim/extra-config.vim;
   };
