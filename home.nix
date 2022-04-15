@@ -191,13 +191,13 @@
       elm-vim
       fzf-vim
       lightline-vim
+      neovim-ayu
       nerdcommenter
       nerdtree
       nerdtree-git-plugin
       vim-devicons
       vim-fugitive
       vim-gitgutter
-      vim-monokai-pro
       vim-nix
       vim-sensible
       vim-sleuth

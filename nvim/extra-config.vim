@@ -23,7 +23,11 @@ if exists('+termguicolors')
   set termguicolors
 endif
 
-syntax on
+" Theme
+syntax enable
+set background=dark
+colorscheme ayu
+
 let g:lightline = {
       \ 'active': {
       \   'left': [ [ 'mode', 'paste' ],
