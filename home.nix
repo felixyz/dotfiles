@@ -49,7 +49,6 @@
   
 
   programs.direnv.enable = true;
-  programs.direnv.enableFishIntegration = true;
 
   home.shellAliases = {
     bux = "bundle exec";
