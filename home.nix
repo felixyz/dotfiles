@@ -24,6 +24,7 @@
     ctop
     diff-so-fancy
     dive
+    docker-compose
     fff
     fzf
     fontconfig
@@ -37,6 +38,7 @@
     nixfmt
     pgcli
     ripgrep
+    scc
     xclip
     (pkgs.nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
   ];
