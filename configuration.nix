@@ -100,6 +100,7 @@
   environment.systemPackages = with pkgs; [
     alacritty
     dropbox
+    exercism
     file
     firefox
     gimp
