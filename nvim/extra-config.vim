@@ -31,7 +31,7 @@ colorscheme ayu
 let g:lightline = {
       \ 'active': {
       \   'left': [ [ 'mode', 'paste' ],
-      \             [ 'gitbranch', 'readonly', 'filename', 'modified' ] ]
+      \             [ 'gitbranch', 'readonly', 'relativepath', 'modified' ] ]
       \ },
       \ 'component': {'helloworld': 'Hello, world!'},
       \ 'component_function': {
@@ -54,6 +54,8 @@ nmap <c-s> :w<cr>
 imap <Tab> <C-P>
 
 inoremap kj <Esc>
+
+set expandtab
 
 " https://www.freecodecamp.org/news/how-to-search-project-wide-vim-ripgrep-ack/
 " ack.vim --- {{{
