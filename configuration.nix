@@ -99,6 +99,7 @@
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     alacritty
+    discord
     dropbox
     exercism
     file
@@ -107,6 +108,7 @@
     gnumake
     google-chrome
     libreoffice
+    signal-desktop
     slack
     speedcrunch
     spotify
