@@ -1,6 +1,11 @@
 { config, pkgs, lib, ... }:
 
 {
+  # https://github.com/nix-community/home-manager/issues/3342#issuecomment-1406637333
+  manual.manpages.enable = false;
+  manual.html.enable = false;
+  manual.json.enable = false;
+
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
