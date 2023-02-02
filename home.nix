@@ -47,6 +47,7 @@
 
   home.sessionVariables = {
     EDITOR = "nvim";
+    FZF_DEFAULT_COMMAND = "rg --files --follow";
   };
   
 
