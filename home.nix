@@ -39,11 +39,13 @@
     jq
     kubectl
     kubernetes-helm
+    moreutils
     mosh
     nixfmt
     pgcli
     ripgrep
     scc
+    tree
     xclip
     (pkgs.nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
   ];
@@ -197,12 +199,14 @@
       ale
       elm-vim
       fzf-vim
+      gleam-vim
       lightline-vim
       neovim-ayu
       nerdcommenter
       nerdtree
       nerdtree-git-plugin
       vim-devicons
+      vim-elixir
       vim-fugitive
       vim-gitgutter
       vim-nix
