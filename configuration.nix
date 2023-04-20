@@ -107,7 +107,9 @@
     gimp
     gnumake
     google-chrome
+    inkscape
     libreoffice
+    ripcord
     signal-desktop
     slack
     speedcrunch
