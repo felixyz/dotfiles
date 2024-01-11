@@ -60,6 +60,9 @@
     (pkgs.nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
     kubectl
     kubernetes-helm
+
+    # LSPs
+    elixir-ls
   ];
 
   fonts.fontconfig.enable = true;

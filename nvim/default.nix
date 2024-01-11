@@ -62,6 +62,7 @@ in {
       nerdcommenter
       nerdtree
       nerdtree-git-plugin
+      nvim-lspconfig
       nvim-treesitter-with-plugins
       vim-devicons
       vim-fugitive
