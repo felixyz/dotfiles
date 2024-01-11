@@ -1,6 +1,17 @@
 { config, pkgs, lib, ... }:
 
-{
+# https://gist.github.com/nat-418/d76586da7a5d113ab90578ed56069509
+let
+  fromGitHub = ref: repo: pkgs.vimUtils.buildVimPluginFrom2Nix {
+    pname = "${lib.strings.sanitizeDerivationName repo}";
+    version = ref;
+    src = builtins.fetchGit {
+      url = "https://github.com/${repo}.git";
+      ref = ref;
+    };
+  };
+
+in {
   # https://github.com/nix-community/home-manager/issues/3342#issuecomment-1406637333
   manual.manpages.enable = false;
   manual.html.enable = false;
@@ -24,6 +35,11 @@
   # changes in each release.
   home.stateVersion = "22.11";
 
+  nixpkgs.config = { 
+    allowUnfree = true;
+    allowUnfreePredicate = (_: true);
+  };
+
   home.packages = with pkgs; [
     bat
     ctop
@@ -34,20 +50,23 @@
     fzf
     fontconfig
     git
-    google-cloud-sdk
     inconsolata
     jq
-    kubectl
-    kubernetes-helm
+    lazygit
     moreutils
     mosh
+    neofetch
     nixfmt
     pgcli
     ripgrep
     scc
     tree
+    vscode
     xclip
+    (google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.gke-gcloud-auth-plugin])
     (pkgs.nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
+    kubectl
+    kubernetes-helm
   ];
 
   fonts.fontconfig.enable = true;
@@ -57,7 +76,6 @@
     FZF_DEFAULT_COMMAND = "rg --files --follow";
   };
   
-
   programs.direnv.enable = true;
 
   home.shellAliases = {
@@ -73,6 +91,7 @@
     userEmail = "felix@hinterstellar.io";
     lfs.enable = true;
     extraConfig = {
+      pack.window = 1;
       core = {
         editor = "nvim";
         pager = "diff-so-fancy | less --tabs=4 -RFX";
@@ -96,8 +115,9 @@
        src = pkgs.fetchFromGitHub {
            owner = "oh-my-fish";
            repo = "plugin-foreign-env";
-           rev = "dddd9213272a0ab848d474d0cbde12ad034e65bc";
-           sha256 = "00xqlyl3lffc5l0viin1nyp819wf81fncqyz87jx8ljjdhilmgbs";
+           rev = "7f0cf099ae1e1e4ab38f46350ed6757d54471de7";
+           sha256 = "4+k5rSoxkTtYFh/lEjhRkVYa2S4KEzJ/IJbyJl+rJjQ=";
+           # sha256 = lib.fakeSha256;
        };
    }
    {
@@ -105,8 +125,8 @@
        src = pkgs.fetchFromGitHub {
            owner = "jhillyerd";
            repo = "plugin-git";
-           rev = "2df7fe23543fe8147c7be23bb85b6c6448ad023e";
-           sha256 = "1c2grvkd8w4jybw5rs41w4lpq4c2yx1jcbnzfpnmc3c2445k9jlh"; #lib.fakeSha256; 
+           rev = "c2b38f53f0b04bc67f9a0fa3d583bafb3f558718";
+           sha256 = "efKPbsXxjHm1wVWPJCV8teG4DgZN5dshEzX8PWuhKo4="; #lib.fakeSha256; 
        };
    }
    {
@@ -196,7 +216,11 @@
     viAlias = true;
     plugins = with pkgs.vimPlugins; [
       ack-vim
-      ale
+      coc-css
+      coc-json
+      coc-nvim
+      coc-tslint
+      coc-yaml
       elm-vim
       fzf-vim
       gleam-vim
@@ -212,6 +236,8 @@
       vim-nix
       vim-sensible
       vim-sleuth
+      (fromGitHub "HEAD" "wuelnerdotexe/vim-astro")
+      (fromGitHub "HEAD" "NoahTheDuke/vim-just")
     ];
     extraConfig = builtins.readFile ./nvim/extra-config.vim;
   };

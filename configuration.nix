@@ -7,6 +7,7 @@
 {
   nix = {
     package = pkgs.nixFlakes;
+    settings.trusted-users = ["root" "felix"];
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
@@ -38,6 +39,8 @@
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.efi.efiSysMountPoint = "/boot/efi";
+  boot.loader.systemd-boot.configurationLimit = 4;
 
   # Fix for Apple keyboard
   # https://discourse.nixos.org/t/setting-sys-module-hid-apple-parameters-fnmode-to-0-at-boot/15570/4
@@ -48,10 +51,6 @@
   # networking.networkmanager.unmanaged = [ "*" "except:type:wwan" "except:type:gsm"];
   networking.hostName = "felix-nixos"; # Define your hostname.
   networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
-  # For Prodigy dev
-  networking.hosts = {
-    "127.0.0.1" = ["sso.prodigygame.xyz"];
-  };
 
   # Set your time zone.
   time.timeZone = "Europe/Stockholm";
@@ -68,7 +67,20 @@
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
-  # i18n.defaultLocale = "en_US.UTF-8";
+  i18n.defaultLocale = "en_US.UTF-8";
+
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "sv_SE.UTF-8";
+    LC_IDENTIFICATION = "sv_SE.UTF-8";
+    LC_MEASUREMENT = "sv_SE.UTF-8";
+    LC_MONETARY = "sv_SE.UTF-8";
+    LC_NAME = "sv_SE.UTF-8";
+    LC_NUMERIC = "sv_SE.UTF-8";
+    LC_PAPER = "sv_SE.UTF-8";
+    LC_TELEPHONE = "sv_SE.UTF-8";
+    LC_TIME = "sv_SE.UTF-8";
+  };
+
   # console = {
   #   font = "Lat2-Terminus16";
   #   keyMap = "us";
@@ -80,6 +92,11 @@
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
+
+  # https://discourse.nixos.org/t/setting-caps-lock-as-ctrl-not-working/11952
+  # Run this and reboot:
+  # gsettings reset org.gnome.desktop.input-sources xkb-options
+  # gsettings reset org.gnome.desktop.input-sources sources
   services.xserver.xkbOptions = "ctrl:swapcaps";  
   console.useXkbConfig = true;
 
@@ -99,12 +116,14 @@
 #  services.udev.extraRules = ''
 #  '';
 
+  users.groups.plugdev = {};
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.felix = {
     isNormalUser = true;
     home = "/home/felix";
     description = "Felix Holmgren";
-    extraGroups = [ "wheel" "networkmanager" "docker" "plugdev" ];
+    extraGroups = [ "wheel" "networkmanager" "docker" "plugdev"];
   };
 
   users.extraUsers.felix = {
@@ -115,26 +134,29 @@
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     alacritty
-    discord
+    (import (fetchTarball https://install.devenv.sh/latest)).default
     dropbox
     exercism
     file
     firefox
     gimp
+    gnome.gnome-tweaks
     gnumake
     google-chrome
-    inkscape
+    # inkscape
     libreoffice
+    ngrok
     ripcord
-    signal-desktop
+    # signal-desktop
     slack
     speedcrunch
     spotify
     sublime-merge
     unixtools.ping
-    vlc
+    # vlc
     wget
-    zoom-us
+    # zoom-us
+    zotero
   ];
 
   programs.fish.enable = true;
@@ -142,9 +164,9 @@
   virtualisation.docker.enable = true;
   
   programs.ssh.extraConfig = ''
-    Host tt-enspirit
-      HostName 167.99.34.71
-      User felix
+    #Host tt-enspirit
+    #  HostName 167.99.34.71
+    #  User felix
   '';
 
   # Some programs need SUID wrappers, can be configured further or are
