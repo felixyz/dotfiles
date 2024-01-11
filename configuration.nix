@@ -39,6 +39,12 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Fix for Apple keyboard
+  # https://discourse.nixos.org/t/setting-sys-module-hid-apple-parameters-fnmode-to-0-at-boot/15570/4
+  boot.extraModprobeConfig = ''
+    options hid_apple fnmode=0
+  '';
+
   # networking.networkmanager.unmanaged = [ "*" "except:type:wwan" "except:type:gsm"];
   networking.hostName = "felix-nixos"; # Define your hostname.
   networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
