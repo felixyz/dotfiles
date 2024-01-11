@@ -1,17 +1,10 @@
 { config, pkgs, lib, ... }:
 
-# https://gist.github.com/nat-418/d76586da7a5d113ab90578ed56069509
-let
-  fromGitHub = ref: repo: pkgs.vimUtils.buildVimPluginFrom2Nix {
-    pname = "${lib.strings.sanitizeDerivationName repo}";
-    version = ref;
-    src = builtins.fetchGit {
-      url = "https://github.com/${repo}.git";
-      ref = ref;
-    };
-  };
+{
+  imports = [
+    ./nvim
+  ];
 
-in {
   # https://github.com/nix-community/home-manager/issues/3342#issuecomment-1406637333
   manual.manpages.enable = false;
   manual.html.enable = false;
@@ -208,37 +201,5 @@ in {
       # { plugin = tmuxPlugins.copycat; }
     ];
     shell = "${pkgs.fish}/bin/fish";
-  };
-
-  programs.neovim = {
-    enable = true;
-    vimAlias = true;
-    viAlias = true;
-    plugins = with pkgs.vimPlugins; [
-      ack-vim
-      coc-css
-      coc-json
-      coc-nvim
-      coc-tslint
-      coc-yaml
-      elm-vim
-      fzf-vim
-      gleam-vim
-      lightline-vim
-      neovim-ayu
-      nerdcommenter
-      nerdtree
-      nerdtree-git-plugin
-      vim-devicons
-      vim-elixir
-      vim-fugitive
-      vim-gitgutter
-      vim-nix
-      vim-sensible
-      vim-sleuth
-      (fromGitHub "HEAD" "wuelnerdotexe/vim-astro")
-      (fromGitHub "HEAD" "NoahTheDuke/vim-just")
-    ];
-    extraConfig = builtins.readFile ./nvim/extra-config.vim;
   };
 }

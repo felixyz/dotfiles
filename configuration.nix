@@ -17,6 +17,7 @@
 
   imports =
     [ # Include the results of the hardware scan.
+      <nixos-hardware/lenovo/thinkpad/p52>
       /etc/nixos/hardware-configuration.nix
     ];
 
