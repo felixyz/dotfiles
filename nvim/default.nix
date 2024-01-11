@@ -8,23 +8,62 @@ in {
     enable = true;
     vimAlias = true;
     viAlias = true;
-    plugins = with pkgs.vimPlugins; [
+    plugins = let
+    nvim-treesitter-with-plugins = pkgs.vimPlugins.nvim-treesitter.withPlugins (treesitter-plugins:
+      with treesitter-plugins; [
+        astro
+        bash
+        c
+        cpp
+        css
+        diff
+        eex
+        elixir
+        elm
+        erlang
+        fish
+        git_rebase
+        gitcommit
+        gitignore
+        gleam
+        graphql
+        haskell
+        heex
+        html
+        java
+        javascript
+        jq
+        json
+        lua
+        make
+        markdown
+        markdown_inline
+        nix
+        ocaml
+        ocaml_interface
+        python
+        query
+        ruby
+        scss
+        sql
+        toml
+        typescript
+        vim
+        vimdoc
+        vue
+        yaml
+      ]);
+    in
+      with pkgs.vimPlugins; [
       ack-vim
-      coc-css
-      coc-json
-      coc-nvim
-      coc-tslint
-      coc-yaml
-      elm-vim
       fzf-vim
-      gleam-vim
       lightline-vim
       neovim-ayu
       nerdcommenter
       nerdtree
       nerdtree-git-plugin
+      nvim-treesitter-with-plugins
       vim-devicons
-      vim-elixir
       vim-fugitive
       vim-gitgutter
       vim-nix
