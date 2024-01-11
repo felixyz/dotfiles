@@ -63,6 +63,7 @@
 
     # LSPs
     elixir-ls
+    nodePackages.typescript-language-server
   ];
 
   fonts.fontconfig.enable = true;

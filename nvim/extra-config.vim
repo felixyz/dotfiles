@@ -94,6 +94,8 @@ require'lspconfig'.elixirls.setup{
   cmd = { "/home/felix/.nix-profile/bin/elixir-ls" };
 }
 
+require'lspconfig'.tsserver.setup{}
+
 -- https://github.com/neovim/nvim-lspconfig#suggested-configuration
 -- Global mappings.
 -- See `:help vim.diagnostic.*` for documentation on any of the below functions
