@@ -21,9 +21,19 @@
 
   hardware.pulseaudio.enable = true;
   hardware.bluetooth.enable = true;
-  hardware.keyboard.zsa.enable = true; # For ZSA Live Training
 
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  #hardware.keyboard.zsa.enable = true; # For ZSA Live Training
+  services.udev.packages = [
+      (pkgs.writeTextFile {
+        name = "moonlander_udev";
+        text = ''
+          SUBSYSTEMS=="usb", ATTRS{idVendor}=="3297", ATTRS{idProduct}=="1969", MODE="0666", TAG+="uaccess", SYMLINK+="stm32_dfu", GROUP="plugdev"
+        '';
+        destination = "/etc/udev/rules.d/50-zsa.rules";
+      })
+    ];
+
+  # boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
