@@ -1,3 +1,43 @@
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", -- latest stable release
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
+require("lazy").setup({
+  "airblade/vim-gitgutter",
+  "itchyny/lightline.vim",
+  "Shatur/neovim-ayu",
+  "neovim/nvim-lspconfig",
+  "preservim/nerdtree",
+  "preservim/nerdcommenter",
+  "Xuyuanp/nerdtree-git-plugin",
+  "tpope/vim-sensible",
+  "tpope/vim-fugitive",
+  "tpope/vim-sleuth",
+  "ryanoasis/vim-devicons",
+  "junegunn/fzf.vim",
+  "mileszs/ack.vim",
+  "nvim-treesitter/nvim-treesitter"
+}, {
+  -- Track these, and change once merged:
+  -- https://github.com/folke/lazy.nvim/pull/1276
+  -- https://github.com/folke/lazy.nvim/pull/1157
+  performance = {
+    reset_packpath = false,
+    rtp = {
+      reset = false
+    }
+  }
+})
+
 -- Splits navigation
 vim.api.nvim_set_keymap('n', '<C-J>', '<C-W><C-J>', {noremap = true})
 vim.api.nvim_set_keymap('n', '<C-K>', '<C-W><C-K>', {noremap = true})
