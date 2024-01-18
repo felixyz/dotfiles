@@ -24,7 +24,6 @@ if exists('+termguicolors')
 endif
 
 " Theme
-syntax enable
 set background=dark
 let ayucolor="dark"
 colorscheme ayu
@@ -94,7 +93,12 @@ require'lspconfig'.elixirls.setup{
   cmd = { "/home/felix/.nix-profile/bin/elixir-ls" };
 }
 
+require'lspconfig'.gleam.setup{}
+require'lspconfig'.ocamllsp.setup{}
+require'lspconfig'.ruby_ls.setup{}
 require'lspconfig'.tsserver.setup{}
+
+vim.lsp.set_log_level("debug")
 
 -- https://github.com/neovim/nvim-lspconfig#suggested-configuration
 -- Global mappings.
@@ -120,16 +124,16 @@ vim.api.nvim_create_autocmd('LspAttach', {
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
     vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
     vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
-    vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, opts)
-    vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
-    vim.keymap.set('n', '<space>wl', function()
+    vim.keymap.set('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, opts)
+    vim.keymap.set('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, opts)
+    vim.keymap.set('n', '<leader>wl', function()
       print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
     end, opts)
-    vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, opts)
-    vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
-    vim.keymap.set({ 'n', 'v' }, '<space>ca', vim.lsp.buf.code_action, opts)
+    vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, opts)
+    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+    vim.keymap.set({ 'n', 'v' }, '<leader>ca', vim.lsp.buf.code_action, opts)
     vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-    vim.keymap.set('n', '<space>f', function()
+    vim.keymap.set('n', '<leader>f', function()
       vim.lsp.buf.format { async = true }
     end, opts)
   end,
@@ -175,4 +179,14 @@ require'nvim-treesitter.configs'.setup {
     additional_vim_regex_highlighting = false,
   },
 }
+EOF
+
+lua <<EOF
+vim.api.nvim_create_augroup('AutoFormatting', {})
+vim.api.nvim_create_autocmd('BufWritePre', {
+  group = 'AutoFormatting',
+  callback = function()
+    vim.lsp.buf.format({ async = false })
+  end,
+})
 EOF
