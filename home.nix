@@ -13,6 +13,8 @@
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
+  # home.extraSpecialArgs = { inherit unstable };
+
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
   home.username = "felix";
@@ -26,7 +28,7 @@
   # You can update Home Manager without changing this value. See
   # the Home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "22.11";
+  home.stateVersion = "23.11";
 
   nixpkgs.config = { 
     allowUnfree = true;
@@ -49,12 +51,11 @@
     moreutils
     mosh
     neofetch
-    nixfmt
     pgcli
     ripgrep
     scc
     tree
-    vscode
+    #vscode
     xclip
     (google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.gke-gcloud-auth-plugin])
     (pkgs.nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
@@ -63,6 +64,7 @@
 
     # LSPs
     elixir-ls
+    ocamlPackages.lsp
     nodePackages.typescript-language-server
   ];
 
@@ -96,12 +98,12 @@
     };
   };
 
-  programs = {
-    exa = {
-      enable = true;
-      enableAliases = true;
-    };
-  };
+  #programs = {
+    #exa = {
+      #enable = true;
+      #enableAliases = true;
+    #};
+  #};
 
   programs.fish = {
    enable = true;
