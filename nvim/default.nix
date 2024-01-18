@@ -73,6 +73,5 @@ in {
       (fromGitHub {user = "wuelnerdotexe"; repo = "vim-astro";})
       (fromGitHub {user = "NoahTheDuke"; repo = "vim-just";})
     ];
-    extraConfig = builtins.readFile ./extra-config.vim;
   };
 }

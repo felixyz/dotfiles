@@ -1,98 +1,80 @@
-" https://thoughtbot.com/blog/vim-splits-move-faster-and-more-naturally
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
-nnoremap <C-L> <C-W><C-L>
-nnoremap <C-H> <C-W><C-H>
-set splitbelow
-set splitright
+-- Splits navigation
+vim.api.nvim_set_keymap('n', '<C-J>', '<C-W><C-J>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<C-K>', '<C-W><C-K>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<C-L>', '<C-W><C-L>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<C-H>', '<C-W><C-H>', {noremap = true})
 
-noremap <Up> <NOP>
-noremap <Down> <NOP>
-noremap <Left> <NOP>
-noremap <Right> <NOP>
+vim.o.splitbelow = true
+vim.o.splitright = true
 
-set number
-filetype plugin on
+-- Disable arrow keys
+vim.api.nvim_set_keymap('', '<Up>', '<NOP>', {noremap = true})
+vim.api.nvim_set_keymap('', '<Down>', '<NOP>', {noremap = true})
+vim.api.nvim_set_keymap('', '<Left>', '<NOP>', {noremap = true})
+vim.api.nvim_set_keymap('', '<Right>', '<NOP>', {noremap = true})
 
-nnoremap <Leader>d :FindDefinition<CR>  
-vnoremap <Leader>d "ay:FindDefinition <C-R>a<CR> 
+vim.wo.number = true
+vim.cmd('filetype plugin on')
 
-if exists('+termguicolors')
-  let &t_8f="\<Esc>[38;2;%lu;%lu;%lum"
-  let &t_8b="\<Esc>[48;2;%lu;%lu;%lum"
-  set termguicolors
-endif
+-- Termguicolors
+if vim.fn.exists('+termguicolors') == 1 then
+  vim.o.termguicolors = true
+end
 
-" Theme
-set background=dark
-let ayucolor="dark"
-colorscheme ayu
+-- Theme
+vim.o.background = 'dark'
+vim.g.ayucolor = 'dark'
+vim.cmd('colorscheme ayu')
 
-let g:lightline = {
-      \ 'active': {
-      \   'left': [ [ 'mode', 'paste' ],
-      \             [ 'gitbranch', 'readonly', 'relativepath', 'modified' ] ]
-      \ },
-      \ 'component': {'helloworld': 'Hello, world!'},
-      \ 'component_function': {
-      \   'gitbranch': 'FugitiveHead'
-      \ },
-      \ }
+-- Lightline configuration
+vim.g.lightline = {
+  active = {
+    left = { { 'mode', 'paste' },
+             { 'gitbranch', 'readonly', 'relativepath', 'modified' } }
+  },
+  component = { helloworld = 'Hello, world!' },
+  component_function = { gitbranch = 'FugitiveHead' },
+}
 
-set noshowmode " lightline shows mode
+vim.o.showmode = false -- lightline shows mode
 
-" Auto-start NERDTree
-autocmd StdinReadPre * let s:std_in=1
-autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
-" https://stackoverflow.com/a/40197334/96531
-" Refresh NERDTree without switching windows
-nmap <Leader>r :NERDTreeFocus<cr>R<c-w><c-p>
+-- Auto-start NERDTree
+vim.cmd([[
+  autocmd StdinReadPre * let s:std_in=1
+  autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+]])
 
-nmap <c-p> :FZF<cr>
-nmap <c-s> :w<cr>
+-- Refresh NERDTree 
+vim.api.nvim_set_keymap('n', '<Leader>r', ':NERDTreeFocus<cr>R<c-w><c-p>', {noremap = true})
 
-imap <Tab> <C-P>
+vim.api.nvim_set_keymap('n', '<c-p>', ':FZF<cr>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<c-s>', ':w<cr>', {noremap = true})
 
-inoremap kj <Esc>
+vim.api.nvim_set_keymap('i', '<Tab>', '<C-P>', {noremap = true})
 
-set expandtab
+vim.api.nvim_set_keymap('i', 'kj', '<Esc>', {noremap = true})
 
-" https://www.freecodecamp.org/news/how-to-search-project-wide-vim-ripgrep-ack/
-" ack.vim --- {{{
+vim.o.expandtab = true
 
-" Use ripgrep for searching ⚡️
-" Options include:
-" --vimgrep -> Needed to parse the rg response properly for ack.vim
-" --type-not sql -> Avoid huge sql file dumps as it slows down the search
-" --smart-case -> Search case insensitive if all lowercase pattern, Search case sensitively otherwise
-let g:ackprg = 'rg --vimgrep --type-not csv --smart-case --context 2'
+-- Ripgrep configuration
+vim.g.ackprg = 'rg --vimgrep --type-not csv --smart-case --context 2'
+vim.g.ack_autoclose = 1
+vim.g.ack_use_cword_for_empty_search = 1
+vim.cmd("cnoreabbrev Ack Ack!")
 
-" Auto close the Quickfix list after pressing '<enter>' on a list item
-let g:ack_autoclose = 1
+vim.api.nvim_set_keymap('n', '<Leader>/', ':Ack!<Space>', {noremap = true})
 
-" Any empty ack search will search for the work the cursor is on
-let g:ack_use_cword_for_empty_search = 1
+-- Navigate quickfix list
+vim.api.nvim_set_keymap('n', '[q', ':cprevious<CR>', {noremap = true, silent = true})
+vim.api.nvim_set_keymap('n', ']q', ':cnext<CR>', {noremap = true, silent = true})
 
-" Don't jump to first match
-cnoreabbrev Ack Ack!
+-- Copy to clipboard
+vim.api.nvim_set_keymap('n', '<C-y>', ':w !xclip -sel c <CR><CR>', {noremap = true})
 
-" Maps <leader>/ so we're ready to type the search keyword
-nnoremap <Leader>/ :Ack!<Space>
-" }}}
-
-" Navigate quickfix list with ease
-nnoremap <silent> [q :cprevious<CR>
-nnoremap <silent> ]q :cnext<CR>
-
-" https://stackoverflow.com/a/60907457/96531
-map <C-y> :w !xclip -sel c <CR><CR>
-
-" LSP config 
-lua <<EOF
+-- LSP config 
 require'lspconfig'.elixirls.setup{
   cmd = { "/home/felix/.nix-profile/bin/elixir-ls" };
 }
-
 require'lspconfig'.gleam.setup{}
 require'lspconfig'.ocamllsp.setup{}
 require'lspconfig'.ruby_ls.setup{}
@@ -138,9 +120,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     end, opts)
   end,
 })
-EOF
 
-lua <<EOF
 require'nvim-treesitter.configs'.setup {
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
@@ -179,9 +159,7 @@ require'nvim-treesitter.configs'.setup {
     additional_vim_regex_highlighting = false,
   },
 }
-EOF
 
-lua <<EOF
 vim.api.nvim_create_augroup('AutoFormatting', {})
 vim.api.nvim_create_autocmd('BufWritePre', {
   group = 'AutoFormatting',
@@ -189,4 +167,3 @@ vim.api.nvim_create_autocmd('BufWritePre', {
     vim.lsp.buf.format({ async = false })
   end,
 })
-EOF
