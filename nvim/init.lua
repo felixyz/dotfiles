@@ -39,19 +39,19 @@ require("lazy").setup({
 })
 
 -- Splits navigation
-vim.api.nvim_set_keymap('n', '<C-J>', '<C-W><C-J>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<C-K>', '<C-W><C-K>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<C-L>', '<C-W><C-L>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<C-H>', '<C-W><C-H>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<C-J>', '<C-W><C-J>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<C-K>', '<C-W><C-K>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<C-L>', '<C-W><C-L>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<C-H>', '<C-W><C-H>', { noremap = true })
 
 vim.o.splitbelow = true
 vim.o.splitright = true
 
 -- Disable arrow keys
-vim.api.nvim_set_keymap('', '<Up>', '<NOP>', {noremap = true})
-vim.api.nvim_set_keymap('', '<Down>', '<NOP>', {noremap = true})
-vim.api.nvim_set_keymap('', '<Left>', '<NOP>', {noremap = true})
-vim.api.nvim_set_keymap('', '<Right>', '<NOP>', {noremap = true})
+vim.api.nvim_set_keymap('', '<Up>', '<NOP>', { noremap = true })
+vim.api.nvim_set_keymap('', '<Down>', '<NOP>', { noremap = true })
+vim.api.nvim_set_keymap('', '<Left>', '<NOP>', { noremap = true })
+vim.api.nvim_set_keymap('', '<Right>', '<NOP>', { noremap = true })
 
 vim.wo.number = true
 vim.cmd('filetype plugin on')
@@ -70,7 +70,7 @@ vim.cmd('colorscheme ayu')
 vim.g.lightline = {
   active = {
     left = { { 'mode', 'paste' },
-             { 'gitbranch', 'readonly', 'relativepath', 'modified' } }
+      { 'gitbranch', 'readonly', 'relativepath', 'modified' } }
   },
   component = { helloworld = 'Hello, world!' },
   component_function = { gitbranch = 'FugitiveHead' },
@@ -84,15 +84,15 @@ vim.cmd([[
   autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 ]])
 
--- Refresh NERDTree 
-vim.api.nvim_set_keymap('n', '<Leader>r', ':NERDTreeFocus<cr>R<c-w><c-p>', {noremap = true})
+-- Refresh NERDTree
+vim.api.nvim_set_keymap('n', '<Leader>r', ':NERDTreeFocus<cr>R<c-w><c-p>', { noremap = true })
 
-vim.api.nvim_set_keymap('n', '<c-p>', ':FZF<cr>', {noremap = true})
-vim.api.nvim_set_keymap('n', '<c-s>', ':w<cr>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<c-p>', ':FZF<cr>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<c-s>', ':w<cr>', { noremap = true })
 
-vim.api.nvim_set_keymap('i', '<Tab>', '<C-P>', {noremap = true})
+vim.api.nvim_set_keymap('i', '<Tab>', '<C-P>', { noremap = true })
 
-vim.api.nvim_set_keymap('i', 'kj', '<Esc>', {noremap = true})
+vim.api.nvim_set_keymap('i', 'kj', '<Esc>', { noremap = true })
 
 vim.o.expandtab = true
 
@@ -102,23 +102,35 @@ vim.g.ack_autoclose = 1
 vim.g.ack_use_cword_for_empty_search = 1
 vim.cmd("cnoreabbrev Ack Ack!")
 
-vim.api.nvim_set_keymap('n', '<Leader>/', ':Ack!<Space>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<Leader>/', ':Ack!<Space>', { noremap = true })
 
 -- Navigate quickfix list
-vim.api.nvim_set_keymap('n', '[q', ':cprevious<CR>', {noremap = true, silent = true})
-vim.api.nvim_set_keymap('n', ']q', ':cnext<CR>', {noremap = true, silent = true})
+vim.api.nvim_set_keymap('n', '[q', ':cprevious<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', ']q', ':cnext<CR>', { noremap = true, silent = true })
 
 -- Copy to clipboard
-vim.api.nvim_set_keymap('n', '<C-y>', ':w !xclip -sel c <CR><CR>', {noremap = true})
+vim.api.nvim_set_keymap('n', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = true })
 
--- LSP config 
-require'lspconfig'.elixirls.setup{
-  cmd = { "/home/felix/.nix-profile/bin/elixir-ls" };
+-- LSP config
+local lspconfig = require('lspconfig')
+
+lspconfig.elixirls.setup {
+  cmd = { "/home/felix/.nix-profile/bin/elixir-ls" },
 }
-require'lspconfig'.gleam.setup{}
-require'lspconfig'.ocamllsp.setup{}
-require'lspconfig'.ruby_ls.setup{}
-require'lspconfig'.tsserver.setup{}
+lspconfig.gleam.setup {}
+lspconfig.ocamllsp.setup {}
+lspconfig.ruby_ls.setup {}
+lspconfig.tsserver.setup {}
+
+lspconfig.lua_ls.setup {
+  settings = {
+    Lua = {
+      diagnostics = {
+        globals = { 'vim' }
+      }
+    }
+  }
+}
 
 vim.lsp.set_log_level("debug")
 
@@ -161,7 +173,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
-require'nvim-treesitter.configs'.setup {
+require 'nvim-treesitter.configs'.setup {
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
 
@@ -185,11 +197,11 @@ require'nvim-treesitter.configs'.setup {
     -- disable = { "c", "rust" },
     -- Or use a function for more flexibility, e.g. to disable slow treesitter highlight for large files
     disable = function(lang, buf)
-        local max_filesize = 100 * 1024 -- 100 KB
-        local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-        if ok and stats and stats.size > max_filesize then
-            return true
-        end
+      local max_filesize = 100 * 1024 -- 100 KB
+      local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+      if ok and stats and stats.size > max_filesize then
+        return true
+      end
     end,
 
     -- Setting this to true will run `:h syntax` and tree-sitter at the same time.

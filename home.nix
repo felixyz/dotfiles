@@ -68,6 +68,7 @@
 
     # LSPs
     elixir-ls
+    lua-language-server
     ocamlPackages.lsp
     nodePackages.typescript-language-server
   ];
