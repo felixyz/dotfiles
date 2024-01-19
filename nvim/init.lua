@@ -109,6 +109,7 @@ vim.api.nvim_set_keymap('n', '[q', ':cprevious<CR>', { noremap = true, silent = 
 vim.api.nvim_set_keymap('n', ']q', ':cnext<CR>', { noremap = true, silent = true })
 
 -- Copy to clipboard
+vim.api.nvim_set_keymap('v', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = true })
 
 -- LSP config
