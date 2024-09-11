@@ -136,7 +136,9 @@
   environment.systemPackages = with pkgs; [
     alacritty
     (import (fetchTarball https://install.devenv.sh/latest)).default
+    discord
     dropbox
+    earlyoom
     exercism
     file
     firefox
@@ -145,16 +147,19 @@
     gnumake
     google-chrome
     # inkscape
+    joplin-desktop
     libreoffice
     ngrok
-    ripcord
+    # ripcord
+    remmina
     # signal-desktop
     slack
     speedcrunch
     spotify
     sublime-merge
+    telegram-desktop
     unixtools.ping
-    # vlc
+    vlc
     wget
     # zoom-us
     zotero
@@ -162,12 +167,12 @@
 
   programs.fish.enable = true;
  
-  virtualisation.docker.enable = true;
+  virtualisation.docker = {
+    enable = true;
+    package = pkgs.docker_20_10;
+  };
   
   programs.ssh.extraConfig = ''
-    #Host tt-enspirit
-    #  HostName 167.99.34.71
-    #  User felix
   '';
 
   # Some programs need SUID wrappers, can be configured further or are

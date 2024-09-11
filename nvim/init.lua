@@ -121,8 +121,8 @@ lspconfig.elixirls.setup {
 }
 lspconfig.gleam.setup {}
 lspconfig.ocamllsp.setup {}
-lspconfig.ruby_ls.setup {}
-lspconfig.tsserver.setup {}
+lspconfig.ruby_lsp.setup {}
+lspconfig.ts_ls.setup {}
 
 lspconfig.lua_ls.setup {
   settings = {

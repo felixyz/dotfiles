@@ -43,12 +43,14 @@
     bat
     ctop
     diff-so-fancy
+    difftastic
     dive
     docker-compose
     fff
     fzf
     fontconfig
     git
+    ijq
     inconsolata
     jq
     lazygit
@@ -87,6 +89,8 @@
     cat = "bat";
     gplease = "git push --no-verify --force-with-lease";
     k = "kubectl";
+    ks = "kubectl -n staging";
+    kp = "kubectl -n production";
   };
 
   programs.git = {
