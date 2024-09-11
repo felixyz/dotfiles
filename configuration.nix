@@ -194,6 +194,34 @@
   # Or disable the firewall altogether.
   networking.firewall.enable = false;
 
+  # DVC VPN certificate
+  security.pki.certificates = [
+    ''
+      -----BEGIN CERTIFICATE-----
+      MIIDjzCCAnegAwIBAgIQFyPb1YwQILpL7T81QR5wNzANBgkqhkiG9w0BAQsFADBZ
+      MRUwEwYKCZImiZPyLGQBGRYFbG9jYWwxFjAUBgoJkiaJk/IsZAEZFgZkdmMtY28x
+      KDAmBgNVBAMTH0RWQyBDZXJ0aWZpY2F0ZSBBdXRob3JpdGl5IC0gRzEwIBcNMjQw
+      NjExMDgzOTQ1WhgPMjA3NDA2MTEwODQ5NDVaMFkxFTATBgoJkiaJk/IsZAEZFgVs
+      b2NhbDEWMBQGCgmSJomT8ixkARkWBmR2Yy1jbzEoMCYGA1UEAxMfRFZDIENlcnRp
+      ZmljYXRlIEF1dGhvcml0aXkgLSBHMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+      AQoCggEBAMXbnUvLQ/NLi+XIMWNK+qaMHf+oKmOnB3F9GbUfQaYiflXUsz42nzf2
+      csMNzRhi4PpgqGPhsw5trx8YxvC/dlnlhHBv5Lv43l+nmL2FY5HcLImDIjtKO7wZ
+      NzF/5pidUb0kvIX0onVwP5tGzJaUhfW7yH4ye2yFcMtFMPPPmEPGdLoZljpK3QQA
+      yunANkd+hi2/HWPYGacx2aQhKsZOvPyDXntXB/xTh4K5Bxv1sBBWeMLiXY6A6xYO
+      xwajF4rjcNWkXNLlyGufK98/oMCevrDvxdZLKDznif1FjopNpexGli2pAFDBpl+y
+      eUOTPDbd1oOIq2j+FXOyFGys2Z/Jq8UCAwEAAaNRME8wCwYDVR0PBAQDAgGGMA8G
+      A1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFD3wY7I8ItbfULsSUkjIF/bP1WRbMBAG
+      CSsGAQQBgjcVAQQDAgEAMA0GCSqGSIb3DQEBCwUAA4IBAQBdU6Q23FcolHGZy3lD
+      mE1GhxUpZgc0uQBZMjafsTfFlTYafGdaDGKt4+W33wERcZ/sMA46F4LiJRSs6KAi
+      CZX5g2Ere7TByROrT0w1KT31NR+JdQf6AGwIz+xwlqKSuBRZa41h+uzTzxD7OEgX
+      wyQ4YJfBMnQEG8IhiozWWOOUZ5S1iAB9nZY59x3Qw5Uzl/P7NQVLYaCwtwibZ7Ix
+      q6vnuK1wypvMP2gNhSDuzc3d6HXmV+aHFs5wAyGzK2/CXJzSv9Hs88tfxHMCoHTo
+      nYhz0ptUQyB/DoAShVwdrfgjPbCP7py/DE34P0HYKJwyQvsO6FXO0WYM+x96JuvW
+      MACf
+      -----END CERTIFICATE-----
+    ''
+  ];
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
