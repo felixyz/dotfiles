@@ -13,7 +13,43 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   "airblade/vim-gitgutter",
-  { "folke/trouble.nvim", dependencies = { "nvim-tree/nvim-web-devicons" } },
+  {
+    "folke/trouble.nvim",
+    opts = {},
+    cmd = "Trouble",
+    keys = {
+      {
+        "<leader>xx",
+        "<cmd>Trouble diagnostics toggle<cr>",
+        desc = "Diagnostics (Trouble)",
+      },
+      {
+        "<leader>xX",
+        "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+        desc = "Buffer Diagnostics (Trouble)",
+      },
+      {
+        "<leader>cs",
+        "<cmd>Trouble symbols toggle focus=false<cr>",
+        desc = "Symbols (Trouble)",
+      },
+      {
+        "<leader>cl",
+        "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+        desc = "LSP Definitions / references / ... (Trouble)",
+      },
+      {
+        "<leader>xL",
+        "<cmd>Trouble loclist toggle<cr>",
+        desc = "Location List (Trouble)",
+      },
+      {
+        "<leader>xQ",
+        "<cmd>Trouble qflist toggle<cr>",
+        desc = "Quickfix List (Trouble)",
+      },
+    },
+  },
   "itchyny/lightline.vim",
   "Shatur/neovim-ayu",
   "neovim/nvim-lspconfig",
@@ -134,7 +170,36 @@ lspconfig.lua_ls.setup {
   }
 }
 
-vim.lsp.set_log_level("debug")
+--local lspconfig = require 'lspconfig'
+--local configs = require 'lspconfig.configs'
+--local lsp_util = require 'lspconfig.util'
+
+--configs.lexical = {
+--default_config = {
+--name = 'Lexical',
+--filetypes = { 'elixir', 'eelixir', 'heex' },
+--cmd = { '/opt/elixir/lexical/bin/start_lexical.sh' },
+--root_dir = function(fname)
+--return lsp_util.root_pattern('mix.exs', '.git')(fname) or vim.loop.os_homedir()
+--end,
+--},
+--}
+
+--lspconfig.lexical.setup {}
+
+
+-- Not working?
+-- require 'lspconfig'.mdx_analyzer.setup {}
+
+vim.filetype.add({
+  extension = { mdx = 'mdx' }
+})
+
+--vim.treesitter.language.register('mdx', 'markdown')
+--local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
+--ft_to_parser.mdx = "markdown"
+
+-- vim.lsp.set_log_level("debug")
 
 -- https://github.com/neovim/nvim-lspconfig#suggested-configuration
 -- Global mappings.
@@ -159,7 +224,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
     vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
-    vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
+    vim.keymap.set('n', '<leader>k', vim.lsp.buf.signature_help, opts)
     vim.keymap.set('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, opts)
     vim.keymap.set('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, opts)
     vim.keymap.set('n', '<leader>wl', function()
@@ -221,12 +286,3 @@ vim.api.nvim_create_autocmd('BufWritePre', {
     vim.lsp.buf.format({ async = false })
   end,
 })
-
--- Trouble
-vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end)
-vim.keymap.set("n", "<leader>xw", function() require("trouble").toggle("workspace_diagnostics") end)
-vim.keymap.set("n", "<leader>xd", function() require("trouble").toggle("document_diagnostics") end)
-vim.keymap.set("n", "<leader>xq", function() require("trouble").toggle("quickfix") end)
-vim.keymap.set("n", "<leader>xl", function() require("trouble").toggle("loclist") end)
-vim.keymap.set("n", "gR", function() require("trouble").toggle("lsp_references") end)
-vim.keymap.set("n", "gD", function() require("trouble").toggle("lsp_definitions") end)

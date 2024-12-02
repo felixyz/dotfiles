@@ -76,6 +76,7 @@
     lua-language-server
     ocamlPackages.lsp
     nodePackages.typescript-language-server
+    ruby-lsp
   ];
 
   fonts.fontconfig.enable = true;

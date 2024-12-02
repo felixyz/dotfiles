@@ -22,6 +22,7 @@ let
       haskell
       heex
       html
+      hurl
       java
       javascript
       jq
