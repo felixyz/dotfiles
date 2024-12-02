@@ -21,7 +21,6 @@
       /etc/nixos/hardware-configuration.nix
     ];
 
-  hardware.pulseaudio.enable = true;
   hardware.bluetooth.enable = true;
 
   #hardware.keyboard.zsa.enable = true; # For ZSA Live Training
