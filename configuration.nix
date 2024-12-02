@@ -169,7 +169,7 @@
  
   virtualisation.docker = {
     enable = true;
-    package = pkgs.docker_20_10;
+    package = pkgs.docker_27;
   };
   
   programs.ssh.extraConfig = ''
