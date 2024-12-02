@@ -96,6 +96,8 @@
     k = "kubectl";
     ks = "kubectl -n staging";
     kp = "kubectl -n production";
+    dokku = "~/.dokku/contrib/dokku_client.sh";
+    dk = "~/.dokku/contrib/dokku_client.sh";
   };
 
   programs.git = {
