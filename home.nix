@@ -82,7 +82,12 @@
     FZF_DEFAULT_COMMAND = "rg --files --follow";
   };
   
-  programs.direnv.enable = true;
+  programs = {
+    direnv = {
+      enable = true;
+      nix-direnv.enable = true;
+    };
+  };
 
   home.shellAliases = {
     bux = "bundle exec";
