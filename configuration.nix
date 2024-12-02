@@ -142,13 +142,14 @@
     file
     firefox
     gimp
-    gnome.gnome-tweaks
+    gnome-tweaks
     gnumake
     google-chrome
     # inkscape
     joplin-desktop
     libreoffice
     ngrok
+    openfortivpn
     # ripcord
     remmina
     # signal-desktop

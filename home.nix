@@ -46,6 +46,7 @@
     difftastic
     dive
     docker-compose
+    fd
     fff
     fzf
     fontconfig
@@ -58,6 +59,8 @@
     mosh
     neofetch
     pgcli
+    pgformatter
+    procs
     ripgrep
     scc
     tree
