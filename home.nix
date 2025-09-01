@@ -72,6 +72,7 @@ in
     neofetch
     pgcli
     pgformatter
+    pijul
     procs
     ripgrep
     scc
@@ -79,16 +80,17 @@ in
     #vscode
     xclip
     (google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.gke-gcloud-auth-plugin])
-    (pkgs.nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
+    pkgs.nerd-fonts.fira-code
+    pkgs.nerd-fonts.droid-sans-mono
     kubectl
     kubernetes-helm
 
-    # LSPs
-    elixir-ls
+    # LSPs / formatters
+    alejandra # "The Uncompromising Nix Code Formatter"
     lua-language-server
-    ocamlPackages.lsp
     nodePackages.typescript-language-server
     ruby-lsp
+    vscode-langservers-extracted
   ];
 
   fonts.fontconfig.enable = true;
@@ -118,8 +120,9 @@ in
 
   programs.git = {
     enable = true;
-    userName = "Felix ";
+    userName = "Felix Holmgren";
     userEmail = "felix@hinterstellar.io";
+    difftastic.enable = true;
     lfs.enable = true;
     extraConfig = {
       pack.window = 1;
@@ -127,6 +130,14 @@ in
         editor = "nvim";
         pager = "diff-so-fancy | less --tabs=4 -RFX";
       };
+    };
+  };
+
+  xdg.configFile."pijul/config.toml".source = (pkgs.formats.toml {}).generate "pijul-config" {
+    author = {
+      name = "felixyz";
+      full_name = "Felix Holmgren";
+      email = "felix@hinterstellar.io";
     };
   };
 
