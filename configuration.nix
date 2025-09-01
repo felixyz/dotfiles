@@ -6,7 +6,6 @@
 
 {
   nix = {
-    package = pkgs.nixFlakes;
     settings.trusted-users = ["root" "felix"];
     extraOptions = ''
       experimental-features = nix-command flakes
@@ -59,8 +58,8 @@
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
   networking.useDHCP = false;
-  networking.interfaces.enp2s0.useDHCP = true;
-  networking.interfaces.wlp3s0.useDHCP = true;
+  # quad9 DNS https://quad9.net/
+  networking.nameservers = [ "9.9.9.9" "149.112.112.112" ];
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -93,11 +92,11 @@
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
 
-  # https://discourse.nixos.org/t/setting-caps-lock-as-ctrl-not-working/11952
+  # https://discourse.nixos.org/t/setting-caps-lock-as-ctrl-not-working/11952/3
   # Run this and reboot:
   # gsettings reset org.gnome.desktop.input-sources xkb-options
   # gsettings reset org.gnome.desktop.input-sources sources
-  services.xserver.xkbOptions = "ctrl:swapcaps";  
+  services.xserver.xkbOptions = "ctrl:swapcaps";  # READ the comment above!
   console.useXkbConfig = true;
 
   # Configure keymap in X11 services.xserver.layout = "us";
@@ -108,7 +107,6 @@
 
   # Enable sound.
   # sound.enable = true;
-  # hardware.pulseaudio.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput.enable = true;
@@ -134,35 +132,43 @@
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     alacritty
-    (import (fetchTarball https://install.devenv.sh/latest)).default
+    #(import (fetchTarball https://install.devenv.sh/latest)).default
+    gnomeExtensions.cronomix
     discord
-    dropbox
+    #dropbox
     earlyoom
     exercism
+    #eyedropper
     file
     firefox
-    gimp
+    #gimp
     gnome-tweaks
     gnumake
-    google-chrome
+    goldendict-ng
+    # google-chrome
+    ungoogled-chromium
     # inkscape
     joplin-desktop
-    libreoffice
-    ngrok
+    #libreoffice
+    #ngrok
     openfortivpn
+    #pijul
+    planify
     # ripcord
-    remmina
-    # signal-desktop
+    #remmina
+    #signal-desktop
     slack
-    speedcrunch
-    spotify
+    #speedcrunch
+    #spotify
     sublime-merge
-    telegram-desktop
+    # tuba
     unixtools.ping
-    vlc
+    #vlc
     wget
+    zed-editor
+    # zfs
     # zoom-us
-    zotero
+
   ];
 
   programs.fish.enable = true;
