@@ -2,6 +2,14 @@
 
 let
   alacritty_colors = builtins.fromTOML (builtins.readFile ./melange_dark.toml);
+  claude-code-latest = pkgs.claude-code.overrideAttrs (old: {
+    version = "1.0.94";
+    src = pkgs.fetchzip {
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-1.0.94.tgz";
+      hash = "sha256-TAGs9elamISvxeEH02w+TU+B7HTYtnWBqukTiSpikeU=";
+    };
+    npmDepsHash = "sha256-M6H6A4i4JBqcFTG/ZkmxpINa4lw8sO5+iu2YcBqmvi1=";
+  });
 in
 {
   imports = [
@@ -44,6 +52,7 @@ in
 
   home.packages = with pkgs; [
     bat
+    claude-code-latest
     ctop
     diff-so-fancy
     difftastic
