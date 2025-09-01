@@ -91,6 +91,7 @@
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
+  services.displayManager.sessionPackages = with pkgs; [ niri ];
 
   # https://discourse.nixos.org/t/setting-caps-lock-as-ctrl-not-working/11952/3
   # Run this and reboot:
@@ -169,6 +170,10 @@
     # zfs
     # zoom-us
 
+    # niri environment
+    niri
+    fuzzel
+    waybar
   ];
 
   programs.fish.enable = true;
