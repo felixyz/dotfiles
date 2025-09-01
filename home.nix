@@ -1,5 +1,8 @@
 { config, pkgs, lib, ... }:
 
+let
+  alacritty_colors = builtins.fromTOML (builtins.readFile ./melange_dark.toml);
+in
 {
   imports = [
     ./nvim
@@ -195,6 +198,9 @@
       shell.program = "${pkgs.fish}/bin/fish";
       window = {
         startup_mode = "Maximized";
+      };
+      colors = alacritty_colors // {
+        draw_bold_text_with_bright_colors = true;
       };
     };
   };

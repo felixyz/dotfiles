@@ -160,8 +160,8 @@ end
 
 -- Theme
 vim.o.background = 'dark'
-vim.g.ayucolor = 'dark'
-vim.cmd('colorscheme ayu')
+vim.opt.termguicolors = true
+vim.cmd.colorscheme 'melange'
 
 -- Lightline configuration
 vim.g.lightline = {
