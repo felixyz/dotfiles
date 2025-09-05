@@ -202,6 +202,20 @@ lspconfig.lua_ls.setup {
   }
 }
 
+--lspconfig.nixd.setup {
+--settings = {
+--nixd = {
+--diagnostics = {
+---- skip false warning about 'self' argument in flakes
+--disable = { "sema-unused-def-lambda-noarg-formal" },
+--},
+--},
+--},
+--}
+
+-- incremental analysis assistant for writing in Nix
+lspconfig.nil_ls.setup {}
+
 --vim.lsp.enable('postgres_lsp')
 
 --local lspconfig = require 'lspconfig'
