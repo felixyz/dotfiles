@@ -19,36 +19,12 @@ require("lazy").setup({
     opts = {},
     cmd = "Trouble",
     keys = {
-      {
-        "<leader>xx",
-        "<cmd>Trouble diagnostics toggle<cr>",
-        desc = "Diagnostics (Trouble)",
-      },
-      {
-        "<leader>xX",
-        "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
-        desc = "Buffer Diagnostics (Trouble)",
-      },
-      {
-        "<leader>cs",
-        "<cmd>Trouble symbols toggle focus=false<cr>",
-        desc = "Symbols (Trouble)",
-      },
-      {
-        "<leader>cl",
-        "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
-        desc = "LSP Definitions / references / ... (Trouble)",
-      },
-      {
-        "<leader>xL",
-        "<cmd>Trouble loclist toggle<cr>",
-        desc = "Location List (Trouble)",
-      },
-      {
-        "<leader>xQ",
-        "<cmd>Trouble qflist toggle<cr>",
-        desc = "Quickfix List (Trouble)",
-      },
+      { "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>",                        desc = "Diagnostics (Trouble)" },
+      { "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",           desc = "Buffer Diagnostics (Trouble)" },
+      { "<leader>cs", "<cmd>Trouble symbols toggle focus=false<cr>",                desc = "Symbols (Trouble)" },
+      { "<leader>cl", "<cmd>Trouble lsp toggle focus=false win.position=right<cr>", desc = "LSP Definitions / references / ..." },
+      { "<leader>xL", "<cmd>Trouble loclist toggle<cr>",                            desc = "Location List (Trouble)" },
+      { "<leader>xQ", "<cmd>Trouble qflist toggle<cr>",                             desc = "Quickfix List (Trouble)" },
     },
   },
   {
@@ -58,13 +34,9 @@ require("lazy").setup({
       "nvim-lua/plenary.nvim",
       "nvim-tree/nvim-web-devicons",
       "MunifTanjim/nui.nvim",
-      -- {"3rd/image.nvim", opts = {}}, -- Optional image support in preview window: See `# Preview Mode` for more information
     },
-    lazy = false, -- neo-tree will lazily load itself
-    ---@module "neo-tree"
-    ---@type neotree.Config?
-    opts = {
-    },
+    lazy = false,
+    opts = {},
   },
   {
     "stevearc/conform.nvim",
@@ -72,74 +44,36 @@ require("lazy").setup({
       formatters_by_ft = {
         nix = { "alejandra" },
       },
-      -- fall back to LSP if no external formatter is configured
       lsp_fallback = true,
+
+      format_on_save = {
+        timeout_ms = 500,
+        lsp_fallback = true,
+        quiet = true, -- suppress error messages when formatter fails
+      },
     },
     config = function(_, opts)
       local conform = require("conform")
       conform.setup(opts)
 
-      -- Hook Conform into LSP formatting
-      local function conform_format(buf_opts)
-        conform.format(buf_opts)
-      end
+      -- Manual format still available
       vim.keymap.set("n", "<leader>f", function()
-        conform_format({ async = true })
+        conform.format({ async = true })
       end, { desc = "Format with LSP/Conform" })
     end,
   },
   {
-    'saghen/blink.cmp',
-    -- optional: provides snippets for the snippet source
-    dependencies = { 'rafamadriz/friendly-snippets' },
-
-    -- use a release tag to download pre-built binaries
-    version = '1.*',
-    -- AND/OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
-    -- build = 'cargo build --release',
-    -- If you use nix, you can build from source using latest nightly rust with:
-    -- build = 'nix run .#build-plugin',
-
-    ---@module 'blink.cmp'
-    ---@type blink.cmp.Config
+    "saghen/blink.cmp",
+    dependencies = { "rafamadriz/friendly-snippets" },
+    version = "1.*",
     opts = {
-      -- 'default' (recommended) for mappings similar to built-in completions (C-y to accept)
-      -- 'super-tab' for mappings similar to vscode (tab to accept)
-      -- 'enter' for enter to accept
-      -- 'none' for no mappings
-      --
-      -- All presets have the following mappings:
-      -- C-space: Open menu or open docs if already open
-      -- C-n/C-p or Up/Down: Select next/previous item
-      -- C-e: Hide menu
-      -- C-k: Toggle signature help (if signature.enabled = true)
-      --
-      -- See :h blink-cmp-config-keymap for defining your own keymap
-      keymap = { preset = 'default' },
-
-      appearance = {
-        -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-        -- Adjusts spacing to ensure icons are aligned
-        nerd_font_variant = 'mono'
-      },
-
-      -- (Default) Only show the documentation popup when manually triggered
+      keymap = { preset = "default" },
+      appearance = { nerd_font_variant = "mono" },
       completion = { documentation = { auto_show = false } },
-
-      -- Default list of enabled providers defined so that you can extend it
-      -- elsewhere in your config, without redefining it, due to `opts_extend`
-      sources = {
-        default = { 'lsp', 'path', 'snippets', 'buffer' },
-      },
-
-      -- (Default) Rust fuzzy matcher for typo resistance and significantly better performance
-      -- You may use a lua implementation instead by using `implementation = "lua"` or fallback to the lua implementation,
-      -- when the Rust fuzzy matcher is not available, by using `implementation = "prefer_rust"`
-      --
-      -- See the fuzzy documentation for more information
-      fuzzy = { implementation = "prefer_rust_with_warning" }
+      sources = { default = { "lsp", "path", "snippets", "buffer" } },
+      fuzzy = { implementation = "prefer_rust_with_warning" },
     },
-    opts_extend = { "sources.default" }
+    opts_extend = { "sources.default" },
   },
   "itchyny/lightline.vim",
   "savq/melange-nvim",
@@ -158,52 +92,11 @@ require("lazy").setup({
       highlight = { enable = true },
       indent = { enable = true },
       ensure_installed = {
-        "astro",
-        "awk",
-        "bash",
-        "c",
-        "cpp",
-        "css",
-        "diff",
-        "eex",
-        "elixir",
-        "elm",
-        "elvish",
-        "erlang",
-        "fish",
-        "git_rebase",
-        "gitcommit",
-        "gitignore",
-        "gleam",
-        "graphql",
-        "haskell",
-        "heex",
-        "html",
-        "hurl",
-        "java",
-        "javascript",
-        "just",
-        "jq",
-        "json",
-        "lua",
-        "luadoc",
-        "make",
-        "markdown",
-        "markdown_inline",
-        "nix",
-        "ocaml",
-        "ocaml_interface",
-        "python",
-        "query",
-        "ruby",
-        "scss",
-        "sql",
-        "toml",
-        "typescript",
-        "vim",
-        "vimdoc",
-        "vue",
-        "yaml",
+        "astro", "awk", "bash", "c", "cpp", "css", "diff", "eex", "elixir", "elm", "elvish", "erlang", "fish",
+        "git_rebase", "gitcommit", "gitignore", "gleam", "graphql", "haskell", "heex", "html", "hurl", "java",
+        "javascript", "just", "jq", "json", "lua", "luadoc", "make", "markdown", "markdown_inline", "nix",
+        "ocaml", "ocaml_interface", "python", "query", "ruby", "scss", "sql", "toml", "typescript", "vim",
+        "vimdoc", "vue", "yaml",
       },
       sync_install = false,
       auto_install = false,
@@ -211,18 +104,17 @@ require("lazy").setup({
     config = function(_, opts)
       require("nvim-treesitter.configs").setup(opts)
     end,
-  }
+  },
 }, {
   -- Track these, and change once merged:
   -- https://github.com/folke/lazy.nvim/pull/1276
   -- https://github.com/folke/lazy.nvim/pull/1157
   performance = {
     reset_packpath = false,
-    rtp = {
-      reset = false
-    }
-  }
+    rtp = { reset = false },
+  },
 })
+
 
 -- Splits navigation
 vim.api.nvim_set_keymap('n', '<C-J>', '<C-W><C-J>', { noremap = true })
@@ -310,6 +202,8 @@ lspconfig.lua_ls.setup {
   }
 }
 
+--vim.lsp.enable('postgres_lsp')
+
 --local lspconfig = require 'lspconfig'
 --local configs = require 'lspconfig.configs'
 --local lsp_util = require 'lspconfig.util'
@@ -377,52 +271,5 @@ vim.api.nvim_create_autocmd('LspAttach', {
     vim.keymap.set('n', '<leader>f', function()
       vim.lsp.buf.format { async = true }
     end, opts)
-  end,
-})
-
-require 'nvim-treesitter.configs'.setup {
-  -- Install parsers synchronously (only applied to `ensure_installed`)
-  sync_install = false,
-
-  -- Automatically install missing parsers when entering buffer
-  -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
-  auto_install = false,
-
-  -- List of parsers to ignore installing (or "all")
-  -- ignore_install = { "javascript" },
-
-  ---- If you need to change the installation directory of the parsers (see -> Advanced Setup)
-  -- parser_install_dir = "/some/path/to/store/parsers", -- Remember to run vim.opt.runtimepath:append("/some/path/to/store/parsers")!
-
-  highlight = {
-    enable = true,
-
-    -- NOTE: these are the names of the parsers and not the filetype. (for example if you want to
-    -- disable highlighting for the `tex` filetype, you need to include `latex` in this list as this is
-    -- the name of the parser)
-    -- list of language that will be disabled
-    -- disable = { "c", "rust" },
-    -- Or use a function for more flexibility, e.g. to disable slow treesitter highlight for large files
-    disable = function(lang, buf)
-      local max_filesize = 100 * 1024 -- 100 KB
-      local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-      if ok and stats and stats.size > max_filesize then
-        return true
-      end
-    end,
-
-    -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-    -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-    -- Using this option may slow down your editor, and you may see some duplicate highlights.
-    -- Instead of true it can also be a list of languages
-    additional_vim_regex_highlighting = false,
-  },
-}
-
-vim.api.nvim_create_augroup('AutoFormatting', {})
-vim.api.nvim_create_autocmd('BufWritePre', {
-  group = 'AutoFormatting',
-  callback = function()
-    vim.lsp.buf.format({ async = false })
   end,
 })
