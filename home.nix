@@ -59,7 +59,9 @@ in
     dive
     docker-compose
     fd
+    fd   # Simple, fast and user-friendly alternative to find
     fff
+    fx   # Terminal JSON viewer
     fzf
     fontconfig
     git
