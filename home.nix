@@ -1,6 +1,9 @@
-{ config, pkgs, lib, ... }:
-
-let
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: let
   alacritty_colors = builtins.fromTOML (builtins.readFile ./melange_dark.toml);
   claude-code-latest = pkgs.claude-code.overrideAttrs (old: {
     version = "1.0.94";
@@ -10,8 +13,7 @@ let
     };
     npmDepsHash = "sha256-M6H6A4i4JBqcFTG/ZkmxpINa4lw8sO5+iu2YcBqmvi1=";
   });
-in
-{
+in {
   imports = [
     ./nvim
   ];
@@ -40,14 +42,14 @@ in
   # the Home Manager release notes for a list of state version
   # changes in each release.
   home.stateVersion = "23.11";
-  
+
   xdg = {
     configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/nvim";
   };
 
-  nixpkgs.config = { 
+  nixpkgs.config = {
     allowUnfree = true;
-    allowUnfreePredicate = (_: true);
+    allowUnfreePredicate = _: true;
   };
 
   home.packages = with pkgs; [
@@ -58,10 +60,10 @@ in
     difftastic
     dive
     docker-compose
-    fd
-    fd   # Simple, fast and user-friendly alternative to find
+    #eza
+    fd # Simple, fast and user-friendly alternative to find
     fff
-    fx   # Terminal JSON viewer
+    fx # Terminal JSON viewer
     fzf
     fontconfig
     git
@@ -90,8 +92,8 @@ in
     # LSPs / formatters
     alejandra # "The Uncompromising Nix Code Formatter"
     lua-language-server
-    nil       # incremental analysis assistant for writing in Nix
-    nixd      # Nix language server, based on nix libraries
+    nil # incremental analysis assistant for writing in Nix
+    nixd # Nix language server, based on nix libraries
     nodePackages.typescript-language-server
     ruby-lsp
     vscode-langservers-extracted
@@ -103,7 +105,7 @@ in
     EDITOR = "nvim";
     FZF_DEFAULT_COMMAND = "rg --files --follow";
   };
-  
+
   programs = {
     direnv = {
       enable = true;
@@ -146,58 +148,57 @@ in
   };
 
   #programs = {
-    #exa = {
-      #enable = true;
-      #enableAliases = true;
-    #};
+  #exa = {
+  #enable = true;
+  #enableAliases = true;
+  #};
   #};
 
   programs.fish = {
-   enable = true;
-  
-   plugins = [
-   {
-       name="foreign-env";
-       src = pkgs.fetchFromGitHub {
-           owner = "oh-my-fish";
-           repo = "plugin-foreign-env";
-           rev = "7f0cf099ae1e1e4ab38f46350ed6757d54471de7";
-           sha256 = "4+k5rSoxkTtYFh/lEjhRkVYa2S4KEzJ/IJbyJl+rJjQ=";
-           # sha256 = lib.fakeSha256;
-       };
-   }
-   {
-       name="plugin-git";
-       src = pkgs.fetchFromGitHub {
-           owner = "jhillyerd";
-           repo = "plugin-git";
-           rev = "c2b38f53f0b04bc67f9a0fa3d583bafb3f558718";
-           sha256 = "efKPbsXxjHm1wVWPJCV8teG4DgZN5dshEzX8PWuhKo4="; #lib.fakeSha256; 
-       };
-   }
-   {
-       name="fish-kubectl-completions";
-       src = pkgs.fetchFromGitHub {
-           owner = "evanlucas";
-           repo = "fish-kubectl-completions";
-           rev = "ced676392575d618d8b80b3895cdc3159be3f628";
-           sha256 = "OYiYTW+g71vD9NWOcX1i2/TaQfAg+c2dJZ5ohwWSDCc="; #lib.fakeSha256; 
-       };
-   }
-   ];
-  
-   shellInit =
-   ''
-       # nix
-       if test -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-           fenv source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-       end
-  
-       # home-manager
-       if test -e /nix/var/nix/profiles/per-user/felix/profile/etc/profile.d/nix.sh 
-           fenv source /nix/var/nix/profiles/per-user/felix/profile/etc/profile.d/nix.sh 
-       end
-   '';
+    enable = true;
+
+    plugins = [
+      {
+        name = "foreign-env";
+        src = pkgs.fetchFromGitHub {
+          owner = "oh-my-fish";
+          repo = "plugin-foreign-env";
+          rev = "7f0cf099ae1e1e4ab38f46350ed6757d54471de7";
+          sha256 = "4+k5rSoxkTtYFh/lEjhRkVYa2S4KEzJ/IJbyJl+rJjQ=";
+          # sha256 = lib.fakeSha256;
+        };
+      }
+      {
+        name = "plugin-git";
+        src = pkgs.fetchFromGitHub {
+          owner = "jhillyerd";
+          repo = "plugin-git";
+          rev = "c2b38f53f0b04bc67f9a0fa3d583bafb3f558718";
+          sha256 = "efKPbsXxjHm1wVWPJCV8teG4DgZN5dshEzX8PWuhKo4="; #lib.fakeSha256;
+        };
+      }
+      {
+        name = "fish-kubectl-completions";
+        src = pkgs.fetchFromGitHub {
+          owner = "evanlucas";
+          repo = "fish-kubectl-completions";
+          rev = "ced676392575d618d8b80b3895cdc3159be3f628";
+          sha256 = "OYiYTW+g71vD9NWOcX1i2/TaQfAg+c2dJZ5ohwWSDCc="; #lib.fakeSha256;
+        };
+      }
+    ];
+
+    shellInit = ''
+      # nix
+      if test -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          fenv source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+      end
+
+      # home-manager
+      if test -e /nix/var/nix/profiles/per-user/felix/profile/etc/profile.d/nix.sh
+          fenv source /nix/var/nix/profiles/per-user/felix/profile/etc/profile.d/nix.sh
+      end
+    '';
   };
 
   programs.starship = {
@@ -223,9 +224,11 @@ in
       window = {
         startup_mode = "Maximized";
       };
-      colors = alacritty_colors // {
-        draw_bold_text_with_bright_colors = true;
-      };
+      colors =
+        alacritty_colors
+        // {
+          draw_bold_text_with_bright_colors = true;
+        };
     };
   };
 
@@ -249,10 +252,10 @@ in
     '';
     keyMode = "vi";
     plugins = with pkgs; [
-      { plugin = tmuxPlugins.resurrect; }
-      { plugin = tmuxPlugins.continuum; }
-      { plugin = tmuxPlugins.pain-control; }
-      { plugin = tmuxPlugins.yank; }
+      {plugin = tmuxPlugins.resurrect;}
+      {plugin = tmuxPlugins.continuum;}
+      {plugin = tmuxPlugins.pain-control;}
+      {plugin = tmuxPlugins.yank;}
       # { plugin = tmuxPlugins.open; }
       # { plugin = tmuxPlugins.copycat; }
     ];

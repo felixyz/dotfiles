@@ -1,37 +1,38 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ config, pkgs, ... }:
-
 {
+  config,
+  pkgs,
+  ...
+}: {
   nix = {
     settings.trusted-users = ["root" "felix"];
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
   };
- 
+
   nixpkgs.config.allowUnfree = true;
 
-  imports =
-    [ # Include the results of the hardware scan.
-      <nixos-hardware/lenovo/thinkpad/p52>
-      /etc/nixos/hardware-configuration.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    <nixos-hardware/lenovo/thinkpad/p52>
+    /etc/nixos/hardware-configuration.nix
+  ];
 
   hardware.bluetooth.enable = true;
 
   #hardware.keyboard.zsa.enable = true; # For ZSA Live Training
   services.udev.packages = [
-      (pkgs.writeTextFile {
-        name = "moonlander_udev";
-        text = ''
-          SUBSYSTEMS=="usb", ATTRS{idVendor}=="3297", ATTRS{idProduct}=="1969", MODE="0666", TAG+="uaccess", SYMLINK+="stm32_dfu", GROUP="plugdev"
-        '';
-        destination = "/etc/udev/rules.d/50-zsa.rules";
-      })
-    ];
+    (pkgs.writeTextFile {
+      name = "moonlander_udev";
+      text = ''
+        SUBSYSTEMS=="usb", ATTRS{idVendor}=="3297", ATTRS{idProduct}=="1969", MODE="0666", TAG+="uaccess", SYMLINK+="stm32_dfu", GROUP="plugdev"
+      '';
+      destination = "/etc/udev/rules.d/50-zsa.rules";
+    })
+  ];
 
   # boot.kernelPackages = pkgs.linuxPackages_latest;
 
@@ -49,7 +50,7 @@
 
   # networking.networkmanager.unmanaged = [ "*" "except:type:wwan" "except:type:gsm"];
   networking.hostName = "felix-nixos"; # Define your hostname.
-  networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
+  networking.wireless.enable = false; # Enables wireless support via wpa_supplicant.
 
   # Set your time zone.
   time.timeZone = "Europe/Stockholm";
@@ -59,7 +60,7 @@
   # replicates the default behaviour.
   networking.useDHCP = false;
   # quad9 DNS https://quad9.net/
-  networking.nameservers = [ "9.9.9.9" "149.112.112.112" ];
+  networking.nameservers = ["9.9.9.9" "149.112.112.112"];
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -91,13 +92,13 @@
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
-  services.displayManager.sessionPackages = with pkgs; [ niri ];
+  services.displayManager.sessionPackages = with pkgs; [niri];
 
   # https://discourse.nixos.org/t/setting-caps-lock-as-ctrl-not-working/11952/3
   # Run this and reboot:
   # gsettings reset org.gnome.desktop.input-sources xkb-options
   # gsettings reset org.gnome.desktop.input-sources sources
-  services.xserver.xkbOptions = "ctrl:swapcaps";  # READ the comment above!
+  services.xserver.xkbOptions = "ctrl:swapcaps"; # READ the comment above!
   console.useXkbConfig = true;
 
   # Configure keymap in X11 services.xserver.layout = "us";
@@ -112,8 +113,8 @@
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput.enable = true;
 
-#  services.udev.extraRules = ''
-#  '';
+  #  services.udev.extraRules = ''
+  #  '';
 
   users.groups.plugdev = {};
 
@@ -122,7 +123,7 @@
     isNormalUser = true;
     home = "/home/felix";
     description = "Felix Holmgren";
-    extraGroups = [ "wheel" "networkmanager" "docker" "plugdev"];
+    extraGroups = ["wheel" "networkmanager" "docker" "plugdev"];
   };
 
   users.extraUsers.felix = {
@@ -177,12 +178,12 @@
   ];
 
   programs.fish.enable = true;
- 
+
   virtualisation.docker = {
     enable = true;
     package = pkgs.docker_27;
   };
-  
+
   programs.ssh.extraConfig = ''
   '';
 
@@ -240,6 +241,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "21.11"; # Did you read the comment?
-
 }
-
