@@ -84,8 +84,7 @@ in {
     #vscode
     xclip
     (google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.gke-gcloud-auth-plugin])
-    pkgs.nerd-fonts.fira-code
-    pkgs.nerd-fonts.droid-sans-mono
+    pkgs.nerd-fonts.hack
     kubectl
     kubernetes-helm
 
@@ -223,6 +222,13 @@ in {
       shell.program = "${pkgs.fish}/bin/fish";
       window = {
         startup_mode = "Maximized";
+      };
+      font = {
+        normal = {
+          family = "Hack Nerd Font";
+          style = "Regular";
+        };
+        size = 11.0;
       };
       colors =
         alacritty_colors
