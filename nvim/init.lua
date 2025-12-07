@@ -42,24 +42,30 @@ require("lazy").setup({
     "stevearc/conform.nvim",
     opts = {
       formatters_by_ft = {
+        javascript = { "prettier" },
+        javascriptreact = { "prettier" },
+        typescript = { "prettier" },
+        typescriptreact = { "prettier" },
+        vue = { "prettier" },
+        svelte = { "prettier" },
+
         nix = { "alejandra" },
       },
-      lsp_fallback = true,
 
+      -- try formatters in order until one succeeds, fall back to LSP
       format_on_save = {
         timeout_ms = 500,
         lsp_fallback = true,
-        quiet = true, -- suppress error messages when formatter fails
+        quiet = true,
       },
     },
     config = function(_, opts)
       local conform = require("conform")
       conform.setup(opts)
 
-      -- Manual format still available
       vim.keymap.set("n", "<leader>f", function()
         conform.format({ async = true })
-      end, { desc = "Format with LSP/Conform" })
+      end, { desc = "Format with Conform/LSP" })
     end,
   },
   {
