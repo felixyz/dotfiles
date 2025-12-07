@@ -203,16 +203,35 @@ in {
   programs.starship = {
     enable = true;
     enableFishIntegration = true;
-    # Configuration written to ~/.config/starship.toml
+
     settings = {
-      # add_newline = false;
+      add_newline = true;
+      format = "$directory$git_branch$git_status\n$character";
 
-      # character = {
-      #   success_symbol = "[➜](bold green)";
-      #   error_symbol = "[➜](bold red)";
-      # };
+      character = {
+        success_symbol = "[❯](bold white)";
+        error_symbol = "[❯](bold red)";
+      };
 
-      # package.disabled = true;
+      directory = {
+        truncate_to_repo = true;
+        format = "[$path]($style) ";
+        style = "bold bright-blue";
+      };
+
+      git_branch = {
+        symbol = "";
+        format = "[$symbol$branch]($style) ";
+        style = "bold green";
+      };
+
+      git_status = {
+        format = "([$all_status$ahead_behind]($style)) ";
+        style = "bold red";
+        untracked = "";
+      };
+
+      status.disabled = true;
     };
   };
 
