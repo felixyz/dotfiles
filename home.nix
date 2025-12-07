@@ -67,13 +67,16 @@ in {
     fzf
     fontconfig
     git
+    git-absorb # git commit --fixup, but automatic
     ijq
     inconsolata
+    jujutsu
     jq
     lazygit
     moreutils
     mosh
     neofetch
+    ngrok
     pgcli
     pgformatter
     pijul
@@ -125,11 +128,12 @@ in {
 
   programs.git = {
     enable = true;
-    userName = "Felix Holmgren";
-    userEmail = "felix@hinterstellar.io";
-    difftastic.enable = true;
     lfs.enable = true;
-    extraConfig = {
+    settings = {
+      user = {
+        name = "Felix Holmgren";
+        email = "felix@hinterstellar.io";
+      };
       pack.window = 1;
       core = {
         editor = "nvim";
@@ -138,11 +142,23 @@ in {
     };
   };
 
+  programs.difftastic = {
+    enable = true;
+    git.enable = true;
+  };
+
   xdg.configFile."pijul/config.toml".source = (pkgs.formats.toml {}).generate "pijul-config" {
     author = {
       name = "felixyz";
       full_name = "Felix Holmgren";
       email = "felix@hinterstellar.io";
+    };
+  };
+
+  programs.jujutsu.settings = {
+    user = {
+      email = "felix@hinterstellar.io";
+      name = "Felix Holmgren";
     };
   };
 
