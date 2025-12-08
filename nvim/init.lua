@@ -187,18 +187,15 @@ vim.api.nvim_set_keymap('n', ']q', ':cnext<CR>', { noremap = true, silent = true
 vim.api.nvim_set_keymap('v', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = true })
 
--- LSP config
-local lspconfig = require('lspconfig')
-
-require 'lspconfig'.elixirls.setup {
+vim.lsp.config('elixirls', {
   cmd = { 'elixir-ls' }
-}
+})
 
-lspconfig.ruby_lsp.setup {}
-lspconfig.ts_ls.setup {}
-lspconfig.eslint.setup {}
+vim.lsp.config('ruby_lsp', {})
+vim.lsp.config('ts_ls', {})
+vim.lsp.config('eslint', {})
 
-lspconfig.lua_ls.setup {
+vim.lsp.config('lua_ls', {
   settings = {
     Lua = {
       diagnostics = {
@@ -206,21 +203,13 @@ lspconfig.lua_ls.setup {
       }
     }
   }
-}
-
---lspconfig.nixd.setup {
---settings = {
---nixd = {
---diagnostics = {
----- skip false warning about 'self' argument in flakes
---disable = { "sema-unused-def-lambda-noarg-formal" },
---},
---},
---},
---}
+})
 
 -- incremental analysis assistant for writing in Nix
-lspconfig.nil_ls.setup {}
+vim.lsp.config('nil_ls', {})
+
+-- Enable all configured LSP servers
+vim.lsp.enable({ 'elixirls', 'ruby_lsp', 'ts_ls', 'eslint', 'lua_ls', 'nil_ls' })
 
 --vim.lsp.enable('postgres_lsp')
 
