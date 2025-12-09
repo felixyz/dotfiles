@@ -73,6 +73,7 @@ in {
     jujutsu
     jq
     lazygit
+    mergiraf # syntax-aware git merge driver
     moreutils
     mosh
     neofetch
@@ -138,7 +139,15 @@ in {
         editor = "nvim";
         pager = "diff-so-fancy | less --tabs=4 -RFX";
       };
+      merge.conflictStyle = "diff3";
+      merge.mergiraf = {
+        name = "mergiraf";
+        driver = "mergiraf merge --git %O %A %B -s %S -x %X -y %Y -p %P -l %L";
+      };
     };
+    attributes = [
+      "* merge=mergiraf"
+    ];
   };
 
   programs.difftastic = {
