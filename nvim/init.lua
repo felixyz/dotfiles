@@ -205,8 +205,7 @@ vim.lsp.config('lua_ls', {
   }
 })
 
--- incremental analysis assistant for writing in Nix
-vim.lsp.config('nil_ls', {})
+vim.lsp.config('nixd', {})
 
 -- Enable all configured LSP servers
 vim.lsp.enable({ 'elixirls', 'ruby_lsp', 'ts_ls', 'eslint', 'lua_ls', 'nil_ls' })

@@ -94,7 +94,6 @@ in {
     # LSPs / formatters
     alejandra # "The Uncompromising Nix Code Formatter"
     lua-language-server
-    nil # incremental analysis assistant for writing in Nix
     nixd # Nix language server, based on nix libraries
     nodePackages.typescript-language-server
     ruby-lsp
