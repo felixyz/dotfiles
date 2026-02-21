@@ -129,9 +129,10 @@ in {
   services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
-  services.displayManager.sessionPackages = with pkgs; [niri];
+
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
+  services.xserver.xkb.options = "ctrl:swapcaps";
 
   # https://discourse.nixos.org/t/setting-caps-lock-as-ctrl-not-working/11952/3
   # Run this and reboot:
@@ -150,7 +151,7 @@ in {
   # sound.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput.enable = true;
+  services.libinput.enable = true;
 
   #  services.udev.extraRules = ''
   #  '';
