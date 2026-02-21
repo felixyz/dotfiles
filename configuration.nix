@@ -54,6 +54,33 @@ in {
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 8;
 
+  zramSwap = {
+    enable = true;
+    memoryPercent = 25;
+    algorithm = "zstd";
+  };
+
+  boot.kernel.sysctl = {
+    "vm.swappiness" = 100; # aggressively use swap as pressure buffer, high swappiness with zram is good
+    "vm.watermark_scale_factor" = 200; # start reclaim earlier
+    "vm.page-cluster" = 0; # lower latency reclaim
+  };
+
+  # --- OOM setup
+  systemd.oomd.enable = true;
+
+  systemd.oomd.settings.OOM = {
+    DefaultMemoryPressureLimit = "60%";
+    DefaultMemoryPressureDurationSec = "30s";
+    DefaultSwapUsedLimit = "90%";
+  };
+
+  # Ensure user sessions are protected, kill leaf services first
+  systemd.user.extraConfig = ''
+    ManagedOOMMemoryPressure=kill
+    ManagedOOMSwap=kill
+  '';
+  # ---
   # Fix for Apple keyboard
   # https://discourse.nixos.org/t/setting-sys-module-hid-apple-parameters-fnmode-to-0-at-boot/15570/4
   boot.extraModprobeConfig = ''
