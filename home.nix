@@ -53,6 +53,7 @@ in {
   };
 
   home.packages = with pkgs; [
+    awscli2
     bat
     claude-code-latest
     ctop
