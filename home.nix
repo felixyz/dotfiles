@@ -6,12 +6,12 @@
 }: let
   alacritty_colors = builtins.fromTOML (builtins.readFile ./melange_dark.toml);
   claude-code-latest = pkgs.claude-code.overrideAttrs (old: {
-    version = "2.0.61";
+    version = "2.1.45";
     src = pkgs.fetchzip {
-      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.0.61.tgz";
-      hash = "sha256-701TwdPtqudwKuphVngMiI6TbM9y1S/HFVTREhkHgdY=";
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.45.tgz";
+      hash = "sha256-EWpGw/5rX4NBPx4sGnz3uzvUtSQKBzCBZPSCTYarsPI=";
     };
-    npmDepsHash = "sha256-701TwdPtqudwKuphVngMiI6TbM9y1S/HFVTREhkHgdY=";
+    npmDepsHash = lib.fakeHash;
   });
 in {
   imports = [
