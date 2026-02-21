@@ -109,7 +109,6 @@ in {
   # networking.networkmanager.unmanaged = [ "*" "except:type:wwan" "except:type:gsm"];
   networking.hostId = "baddcafe"; # Must be set for zfs to work
   networking.hostName = "felix-nixos"; # Define your hostname.
-  networking.wireless.enable = false; # Enables wireless support via wpa_supplicant.
 
   # Set your time zone.
   time.timeZone = "Europe/Stockholm";
@@ -207,34 +206,32 @@ in {
     gnome-tweaks
     gnumake
     goldendict-ng
-    # google-chrome
     ungoogled-chromium
     # inkscape
     joplin-desktop
-    #libreoffice
+    libreoffice
     #ngrok
     openfortivpn
     #pijul
-    planify
+    # planify
     # ripcord
     #remmina
     unstable.signal-desktop
     slack
     #speedcrunch
-    #spotify
+    spotify
     sublime-merge
     # tuba
+    # tutanota-desktop
     unixtools.ping
     #vlc
     wget
-    zed-editor
-    # zfs
     # zoom-us
 
     # niri environment
-    niri
-    fuzzel
-    waybar
+    # niri
+    # fuzzel
+    # waybar
   ];
 
   programs.fish.enable = true;
