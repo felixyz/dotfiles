@@ -1,7 +1,11 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
-{pkgs, ...}: let
+{
+  pkgs,
+  lib,
+  ...
+}: let
   # latest nixpkgs-unstable, to get the newest signal-desktop
   unstable =
     import (builtins.fetchTarball {
@@ -40,11 +44,15 @@ in {
 
   # boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  # Use the systemd-boot EFI boot loader.
+  fileSystems."/boot" = {
+    device = lib.mkForce "/dev/disk/by-uuid/AC04-D43D";
+    fsType = "vfat";
+    options = ["fmask=0077" "dmask=0077"];
+  };
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.efi.efiSysMountPoint = "/boot/efi";
-  boot.loader.systemd-boot.configurationLimit = 4;
+  boot.loader.systemd-boot.configurationLimit = 8;
 
   # Fix for Apple keyboard
   # https://discourse.nixos.org/t/setting-sys-module-hid-apple-parameters-fnmode-to-0-at-boot/15570/4
