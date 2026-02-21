@@ -188,46 +188,25 @@ vim.api.nvim_set_keymap('v', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = t
 vim.api.nvim_set_keymap('n', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = true })
 
 vim.lsp.config('elixirls', {
-  cmd = { 'elixir-ls' }
+  cmd = { 'elixir-ls' },
+  filetypes = { 'elixir', 'eelixir', 'heex', 'surface' },
+  root_markers = { 'mix.exs', '.git' },
 })
-
 vim.lsp.config('ruby_lsp', {})
 vim.lsp.config('ts_ls', {})
 vim.lsp.config('eslint', {})
-
 vim.lsp.config('lua_ls', {
   settings = {
     Lua = {
-      diagnostics = {
-        globals = { 'vim' }
-      }
+      diagnostics = { globals = { 'vim' } }
     }
   }
 })
-
 vim.lsp.config('nixd', {})
 
--- Enable all configured LSP servers
-vim.lsp.enable({ 'elixirls', 'ruby_lsp', 'ts_ls', 'eslint', 'lua_ls', 'nil_ls' })
+vim.lsp.enable({ 'elixirls', 'ruby_lsp', 'ts_ls', 'eslint', 'lua_ls', 'nixd' })
 
 --vim.lsp.enable('postgres_lsp')
-
---local lspconfig = require 'lspconfig'
---local configs = require 'lspconfig.configs'
---local lsp_util = require 'lspconfig.util'
-
---configs.lexical = {
---default_config = {
---name = 'Lexical',
---filetypes = { 'elixir', 'eelixir', 'heex' },
---cmd = { '/opt/elixir/lexical/bin/start_lexical.sh' },
---root_dir = function(fname)
---return lsp_util.root_pattern('mix.exs', '.git')(fname) or vim.loop.os_homedir()
---end,
---},
---}
-
---lspconfig.lexical.setup {}
 
 
 -- Not working?
