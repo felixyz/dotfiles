@@ -2,6 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 {
+  config,
   pkgs,
   lib,
   ...
@@ -42,7 +43,24 @@ in {
     })
   ];
 
-  # boot.kernelPackages = pkgs.linuxPackages_latest;
+  # ZFS support
+  boot.supportedFilesystems = ["zfs"];
+  boot.zfs.forceImportRoot = false;
+  # Pin kernel to ZFS-compatible version to prevent build failures
+  boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
+
+  # ZFS maintenance
+  services.zfs.autoScrub.enable = true;
+  services.zfs.trim.enable = true;
+
+  # ZFS /nix mount
+  fileSystems."/nix" = {
+    device = "tank/nix";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+  boot.zfs.extraPools = ["tank"];
 
   fileSystems."/boot" = {
     device = lib.mkForce "/dev/disk/by-uuid/AC04-D43D";
@@ -81,6 +99,7 @@ in {
     ManagedOOMSwap=kill
   '';
   # ---
+
   # Fix for Apple keyboard
   # https://discourse.nixos.org/t/setting-sys-module-hid-apple-parameters-fnmode-to-0-at-boot/15570/4
   boot.extraModprobeConfig = ''
@@ -88,6 +107,7 @@ in {
   '';
 
   # networking.networkmanager.unmanaged = [ "*" "except:type:wwan" "except:type:gsm"];
+  networking.hostId = "baddcafe"; # Must be set for zfs to work
   networking.hostName = "felix-nixos"; # Define your hostname.
   networking.wireless.enable = false; # Enables wireless support via wpa_supplicant.
 
