@@ -100,6 +100,26 @@ in {
   '';
   # ---
 
+  # Dropbox
+  systemd.user.services.dropbox = {
+    wantedBy = ["graphical-session.target"];
+    unitConfig.RequiresMountsFor = ["/data/Dropbox"];
+    environment = {
+      QT_PLUGIN_PATH = "/run/current-system/sw/${pkgs.qt5.qtbase.qtPluginPrefix}";
+      QML2_IMPORT_PATH = "/run/current-system/sw/${pkgs.qt5.qtbase.qtQmlPrefix}";
+    };
+    serviceConfig = {
+      ExecStart = "${lib.getBin pkgs.dropbox}/bin/dropbox";
+      ExecReload = "${lib.getBin pkgs.coreutils}/bin/kill -HUP $MAINPID";
+      KillMode = "control-group";
+      Restart = "on-failure";
+      RestartSec = "3";
+      PrivateTmp = true;
+      ProtectSystem = "full";
+      Nice = 10;
+    };
+  };
+
   # Fix for Apple keyboard
   # https://discourse.nixos.org/t/setting-sys-module-hid-apple-parameters-fnmode-to-0-at-boot/15570/4
   boot.extraModprobeConfig = ''
@@ -196,7 +216,6 @@ in {
     bubblewrap # Low-level unprivileged sandboxing (for sandboxing)
     gnomeExtensions.cronomix
     discord
-    #dropbox
     earlyoom
     exercism
     #eyedropper
