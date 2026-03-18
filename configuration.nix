@@ -193,7 +193,7 @@ in {
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     alacritty
-    #(import (fetchTarball https://install.devenv.sh/latest)).default
+    bubblewrap # Low-level unprivileged sandboxing (for sandboxing)
     gnomeExtensions.cronomix
     discord
     #dropbox
@@ -218,8 +218,10 @@ in {
     #remmina
     unstable.signal-desktop
     slack
+    socat # bidirectional data transfer (for sandboxing)
     #speedcrunch
     spotify
+    squid # HTTP proxy for domain filtering (for sandboxing)
     sublime-merge
     # tuba
     # tutanota-desktop

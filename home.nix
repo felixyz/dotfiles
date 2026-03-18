@@ -53,6 +53,8 @@ in {
   };
 
   home.packages = with pkgs; [
+    (writeShellScriptBin "bwrap-sandbox" (builtins.readFile ./scripts/bwrap-sandbox.sh))
+    (writeShellScriptBin "bwrap-allow-host" (builtins.readFile ./scripts/bwrap-allow-host.sh))
     awscli2
     bat
     claude-code-latest
@@ -125,6 +127,7 @@ in {
     kp = "kubectl -n production";
     dokku = "~/.dokku/contrib/dokku_client.sh";
     dk = "~/.dokku/contrib/dokku_client.sh";
+    jean-claude = "bwrap-sandbox $(command -v claude) --dangerously-skip-permissions";
   };
 
   programs.git = {
