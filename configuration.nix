@@ -214,6 +214,7 @@ in {
   environment.systemPackages = with pkgs; [
     alacritty
     bubblewrap # Low-level unprivileged sandboxing (for sandboxing)
+    devenv
     gnomeExtensions.cronomix
     discord
     earlyoom
