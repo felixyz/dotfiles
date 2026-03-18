@@ -5,14 +5,21 @@
   ...
 }: let
   alacritty_colors = builtins.fromTOML (builtins.readFile ./melange_dark.toml);
-  claude-code-latest = pkgs.claude-code.overrideAttrs (old: {
-    version = "2.1.45";
+  claude-code-latest = pkgs.stdenv.mkDerivation {
+    pname = "claude-code";
+    version = "2.1.76";
     src = pkgs.fetchzip {
-      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.45.tgz";
-      hash = "sha256-EWpGw/5rX4NBPx4sGnz3uzvUtSQKBzCBZPSCTYarsPI=";
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.76.tgz";
+      hash = "sha256-kjzPTG32f35eN6S85gGLUCmsNwH70Sq5rruEs/0hioM=";
     };
-    npmDepsHash = lib.fakeHash;
-  });
+    nativeBuildInputs = [pkgs.makeWrapper];
+    installPhase = ''
+      mkdir -p $out/lib/claude-code $out/bin
+      cp -r . $out/lib/claude-code/
+      makeWrapper ${pkgs.nodejs}/bin/node $out/bin/claude \
+        --add-flags "$out/lib/claude-code/cli.js"
+    '';
+  };
 in {
   imports = [
     ./nvim
