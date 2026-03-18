@@ -204,7 +204,7 @@ in {
     isNormalUser = true;
     home = "/home/felix";
     description = "Felix Holmgren";
-    extraGroups = ["wheel" "networkmanager" "docker" "plugdev"];
+    extraGroups = ["wheel" "networkmanager" "plugdev"];
   };
 
   users.extraUsers.felix = {
@@ -261,10 +261,22 @@ in {
 
   programs.fish.enable = true;
 
-  virtualisation.docker = {
+  virtualisation.podman = {
     enable = true;
-    package = pkgs.docker_29;
+    dockerCompat = true; # creates 'docker' -> 'podman' symlink
+    dockerSocket.enable = true;
   };
+
+  virtualisation.containers.containersConf.settings = {
+    engine = {
+      compose_providers = ["${pkgs.docker-compose}/bin/docker-compose"];
+      compose_warning_logs = false;
+    };
+  };
+
+  # Rootless podman needs subuid/subgid ranges for user namespaces
+  users.users.felix.subUidRanges = [{startUid = 100000; count = 65536;}];
+  users.users.felix.subGidRanges = [{startGid = 100000; count = 65536;}];
 
   programs.ssh.extraConfig = ''
   '';
