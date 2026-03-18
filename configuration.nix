@@ -47,7 +47,7 @@ in {
   boot.supportedFilesystems = ["zfs"];
   boot.zfs.forceImportRoot = false;
   # Pin kernel to ZFS-compatible version to prevent build failures
-  boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
+  boot.kernelPackages = pkgs.linuxPackages;
 
   # ZFS maintenance
   services.zfs.autoScrub.enable = true;
@@ -171,6 +171,8 @@ in {
 
   services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
+  services.desktopManager.plasma6.enable = true;
+  programs.ssh.askPassword = lib.mkForce "${pkgs.seahorse}/libexec/seahorse/ssh-askpass";
   services.xserver.xkb.options = "ctrl:swapcaps";
 
   # https://discourse.nixos.org/t/setting-caps-lock-as-ctrl-not-working/11952/3
@@ -215,6 +217,7 @@ in {
     alacritty
     bubblewrap # Low-level unprivileged sandboxing (for sandboxing)
     devenv
+    gnomeExtensions.appindicator
     gnomeExtensions.cronomix
     discord
     earlyoom

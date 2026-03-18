@@ -71,6 +71,7 @@ in {
     dive
     docker-compose
     #eza
+    fastfetch
     fd # Simple, fast and user-friendly alternative to find
     fff
     fx # Terminal JSON viewer
@@ -85,15 +86,15 @@ in {
     lazygit
     mergiraf # syntax-aware git merge driver
     moreutils
-    mosh
-    neofetch
     ngrok
     pgcli
     pgformatter
     pijul
     procs
+    python313
     ripgrep
     scc
+    shellcheck
     tree
     #vscode
     xclip
@@ -104,6 +105,7 @@ in {
 
     # LSPs / formatters
     alejandra # "The Uncompromising Nix Code Formatter"
+    elixir-ls
     lua-language-server
     nixd # Nix language server, based on nix libraries
     nodePackages.typescript-language-server
@@ -207,8 +209,8 @@ in {
         src = pkgs.fetchFromGitHub {
           owner = "jhillyerd";
           repo = "plugin-git";
-          rev = "c2b38f53f0b04bc67f9a0fa3d583bafb3f558718";
-          sha256 = "efKPbsXxjHm1wVWPJCV8teG4DgZN5dshEzX8PWuhKo4="; #lib.fakeSha256;
+          rev = "09db2a91510ca8b6abc2ad23c6484f56b3cd72be";
+          sha256 = "2+CX9ZGNkois7h3m30VG19Cf4ykRdoiPpEVxJMk75I4="; #lib.fakeSha256;
         };
       }
       {
@@ -269,6 +271,8 @@ in {
       status.disabled = true;
     };
   };
+
+  xdg.configFile."alacritty/alacritty.toml".force = true;
 
   programs.alacritty = {
     enable = true;
