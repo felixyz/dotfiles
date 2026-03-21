@@ -62,6 +62,8 @@ in {
   home.packages = with pkgs; [
     (writeShellScriptBin "bwrap-sandbox" (builtins.readFile ./scripts/bwrap-sandbox.sh))
     (writeShellScriptBin "bwrap-allow-host" (builtins.readFile ./scripts/bwrap-allow-host.sh))
+    (writeShellScriptBin "bwrap-allow-port" (builtins.readFile ./scripts/bwrap-allow-port.sh))
+    (writeShellScriptBin "podman-build" (builtins.readFile ./scripts/podman-build.sh))
     awscli2
     bat
     claude-code-latest
@@ -69,7 +71,6 @@ in {
     diff-so-fancy
     difftastic
     dive
-    docker-compose
     #eza
     fastfetch
     fd # Simple, fast and user-friendly alternative to find
@@ -118,6 +119,7 @@ in {
   home.sessionVariables = {
     EDITOR = "nvim";
     FZF_DEFAULT_COMMAND = "rg --files --follow";
+    DOCKER_BUILD = "podman-build"; # dereferences symlinks in build context for podman compat
   };
 
   programs = {
@@ -137,6 +139,7 @@ in {
     dokku = "~/.dokku/contrib/dokku_client.sh";
     dk = "~/.dokku/contrib/dokku_client.sh";
     jean-claude = "bwrap-sandbox $(command -v claude) --dangerously-skip-permissions";
+    jcd = "env DOCKER_HOST=unix:///run/bwrap-podman/podman.sock CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman";
   };
 
   programs.git = {

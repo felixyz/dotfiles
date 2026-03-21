@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # bwrap-allow-host: Add a domain to the bwrap-sandbox allowlist and reload squid.
 #
-# Usage: bwrap-allow-host <domain>        (add to per-project .allowed-hosts)
+# Usage: bwrap-allow-host <domain>        (add to per-project .sandbox/allowed-hosts)
 #        bwrap-allow-host -g <domain>   (add to global allowlist instead)
 #
 # Adds to the persistent allowlist file AND to any running squid's snapshot,
@@ -32,7 +32,7 @@ DOMAIN="$1"
 if [ "$GLOBAL" = true ]; then
   TARGET="$GLOBAL_ALLOWLIST"
 else
-  TARGET=".allowed-hosts"
+  TARGET=".sandbox/allowed-hosts"
 fi
 
 # Append to persistent allowlist if not already present
