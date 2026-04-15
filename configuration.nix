@@ -186,6 +186,25 @@
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
 
+  # Swap Super and Alt on the built-in laptop keyboard only
+  services.keyd = {
+    enable = true;
+    keyboards.laptop = {
+      ids = [ "0001:0001" ];
+      settings.main = {
+        leftalt = "layer(meta)";
+        leftmeta = "layer(alt)";
+      };
+    };
+    keyboards.mouse = {
+      ids = [ "25a7:fa10" ];
+      settings.main = {
+        mouseback = "M-,";
+        mouseforward = "M-.";
+      };
+    };
+  };
+
   #  services.udev.extraRules = ''
   #  '';
 
