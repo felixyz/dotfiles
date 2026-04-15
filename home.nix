@@ -4,13 +4,19 @@
   lib,
   ...
 }: let
+  # Separate nixpkgs pin for packages where we want a newer version
+  # than the system channel provides. Update the sha256 to bump.
+  nixpkgs-latest = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/nixpkgs-unstable.tar.gz";
+    sha256 = "1sxhlp1khk9ifh24lcg5qland4pg056l5jhyfw8xq3qmpavf390x";
+  }) {config.allowUnfree = true;};
   alacritty_colors = builtins.fromTOML (builtins.readFile ./melange_dark.toml);
   claude-code-latest = pkgs.stdenv.mkDerivation {
     pname = "claude-code";
-    version = "2.1.76";
+    version = "2.1.107";
     src = pkgs.fetchzip {
-      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.76.tgz";
-      hash = "sha256-kjzPTG32f35eN6S85gGLUCmsNwH70Sq5rruEs/0hioM=";
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.107.tgz";
+      hash = "sha256-FpJ7grsXbBJxzbqSZTN6uICd1sGxizMEpHbs1n9yW3s=";
     };
     nativeBuildInputs = [pkgs.makeWrapper];
     installPhase = ''
@@ -67,6 +73,8 @@ in {
     awscli2
     bat
     claude-code-latest
+    nixpkgs-latest.devenv
+    nixpkgs-latest.signal-desktop
     ctop
     diff-so-fancy
     difftastic

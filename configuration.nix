@@ -6,15 +6,7 @@
   pkgs,
   lib,
   ...
-}: let
-  # latest nixpkgs-unstable, to get the newest signal-desktop
-  unstable =
-    import (builtins.fetchTarball {
-      url = "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz";
-    }) {
-      config.allowUnfree = true;
-    };
-in {
+}: {
   nix = {
     settings.trusted-users = ["root" "felix"];
     extraOptions = ''
@@ -235,7 +227,7 @@ in {
   environment.systemPackages = with pkgs; [
     alacritty
     bubblewrap # Low-level unprivileged sandboxing (for sandboxing)
-    devenv
+
     gnomeExtensions.appindicator
     gnomeExtensions.cronomix
     discord
@@ -258,7 +250,7 @@ in {
     # planify
     # ripcord
     #remmina
-    unstable.signal-desktop
+
     slack
     socat # bidirectional data transfer (for sandboxing)
     #speedcrunch
