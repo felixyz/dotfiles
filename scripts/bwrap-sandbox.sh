@@ -29,27 +29,32 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-PROJECT_DIR="$(pwd)"
+PROJECT_DIR="$(realpath "$(pwd)")"
 
 # Guard against dangerous PROJECT_DIR values (allowlist, not blocklist)
-case "$PROJECT_DIR" in
-  "$HOME"/.ssh*|"$HOME"/.gnupg*|"$HOME"/.aws*|"$HOME"/.config/secrets*)
-    echo "Error: refusing to sandbox inside sensitive directory $PROJECT_DIR" >&2
-    exit 1
-    ;;
-  "$HOME"/*)
-    ;; # OK — under $HOME but not in a sensitive subdir
-  /code/*)
-    ;; # OK — shared code directory
-  *)
-    echo "Error: PROJECT_DIR must be under \$HOME or /code (got $PROJECT_DIR)" >&2
-    exit 1
-    ;;
-esac
+#case "$PROJECT_DIR" in
+  #"$HOME"/.ssh*|"$HOME"/.gnupg*|"$HOME"/.aws*|"$HOME"/.config/secrets*)
+    #echo "Error: refusing to sandbox inside sensitive directory $PROJECT_DIR" >&2
+    #exit 1
+    #;;
+  #/code/*)
+    #;; # OK — shared code directory
+  #*)
+    #echo "Error: PROJECT_DIR must be under \$HOME or /code (got $PROJECT_DIR)" >&2
+    #exit 1
+    #;;
+#esac
 
 GLOBAL_ALLOWLIST="$HOME/.config/bwrap-sandbox/allowed-hosts.txt"
 PROJECT_ALLOWLIST="$PROJECT_DIR/.sandbox/allowed-hosts"
 SANDBOX_DIR=$(mktemp -d --tmpdir="$HOME/.cache" "bwrap-sandbox.$(basename "$PROJECT_DIR").XXXXXX")
+# Sandbox gets its own .devenv/state (so postgres dir is absent and initdb runs),
+# but the host's venv is bind-mounted back in to avoid re-downloading packages.
+mkdir -p "$SANDBOX_DIR/devenv-state"
+BWRAP_DEVENV_VENV_ARGS=()
+if [ -d "$PROJECT_DIR/.devenv/state/venv" ]; then
+  BWRAP_DEVENV_VENV_ARGS+=(--bind "$PROJECT_DIR/.devenv/state/venv" "$PROJECT_DIR/.devenv/state/venv")
+fi
 PIDS=()
 
 # Pick a random available port for squid
@@ -67,6 +72,8 @@ SQUID_PORT=$(pick_free_port)
 INNER_PROXY_PORT=$SQUID_PORT
 
 cleanup() {
+  # Stop containers started via bwrap-podman during this session
+  CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote stop -a -t 2 2>/dev/null || true
   for pid in "${PIDS[@]}"; do
     kill -9 "$pid" 2>/dev/null || true
   done
@@ -259,6 +266,10 @@ chmod +x "$INNER_SCRIPT"
 # without needing to know their names, while allowing Claude to write to its
 # operational subdirectories (sessions, cache, etc.).
 CLAUDE_DIR_ARGS=(--ro-bind "$HOME/.claude" "$HOME/.claude")
+# .credentials.json must be writable so OAuth token refresh can persist
+if [ -f "$HOME/.claude/.credentials.json" ]; then
+  CLAUDE_DIR_ARGS+=(--bind "$HOME/.claude/.credentials.json" "$HOME/.claude/.credentials.json")
+fi
 CLAUDE_RO_SUBDIRS=("plugins")
 for subdir in "$HOME/.claude"/*/; do
   [ -d "$subdir" ] || continue
@@ -291,6 +302,8 @@ bwrap \
   --symlink /nix/var/nix/profiles/per-user/"$USER"/home-manager-path "$HOME/.nix-profile" \
   --ro-bind "$HOME/.config/git" "$HOME/.config/git" \
   --bind "$PROJECT_DIR" "$PROJECT_DIR" \
+  --bind "$SANDBOX_DIR/devenv-state" "$PROJECT_DIR/.devenv/state" \
+  ${BWRAP_DEVENV_VENV_ARGS[@]+"${BWRAP_DEVENV_VENV_ARGS[@]}"} \
   "${CLAUDE_DIR_ARGS[@]}" \
   --bind "$HOME/.claude.json" "$HOME/.claude.json" \
   --tmpfs "$PROJECT_DIR/.sandbox" \

@@ -29,9 +29,10 @@ if [ "$context_idx" -ge 0 ]; then
     done < "$context/.dockerignore"
   fi
 
-  # Copy context with dereferenced symlinks, respecting .dockerignore.
-  # --copy-links dereferences symlinks; --ignore-missing-args skips broken ones.
-  rsync -rlpt --copy-links --ignore-missing-args "${excludes[@]}" "$context/" "$tmp/ctx/"
+  # Copy context, dereferencing only symlinks pointing outside the context.
+  # --copy-unsafe-links dereferences external symlinks (podman rejects these),
+  # leaves internal symlinks intact (e.g. node_modules/.bin).
+  rsync -rlpt --copy-unsafe-links "${excludes[@]}" "$context/" "$tmp/ctx/"
   args[$context_idx]="$tmp/ctx"
 fi
 

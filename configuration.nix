@@ -211,6 +211,10 @@ in {
   # Dedicated user for sandboxed container operations. Podman runs as this user
   # so containers can’t access felix’s home directory (SSH keys, credentials, etc.).
   # Unix file permissions do the enforcement — no sandbox code needed.
+  # SECURITY INVARIANT: /home/felix must remain mode 700 (the NixOS default).
+  # The bwrap-podman isolation depends on this — if bwrap-podman can traverse
+  # /home/felix, the podman socket becomes a sandbox escape (containers could
+  # volume-mount felix’s files).
   users.users.bwrap-podman = {
     isSystemUser = true;
     group = "podman-dev";
@@ -220,6 +224,7 @@ in {
 
   users.users.bwrap-podman.subUidRanges = [{startUid = 200000; count = 65536;}];
   users.users.bwrap-podman.subGidRanges = [{startGid = 200000; count = 65536;}];
+  users.users.bwrap-podman.linger = true;
 
   users.extraUsers.felix = {
     shell = pkgs.fish;
@@ -282,44 +287,36 @@ in {
   };
 
   # Podman API socket for sandboxed container operations.
-  # Runs as bwrap-podman so containers can't access felix's files.
-  # Socket-activated: starts on first connection, no idle resource usage.
+  # Runs as bwrap-podman user service (via linger) so containers can't access
+  # felix's files (/home/felix is 700). User service gives podman natural access
+  # to its own systemd instance for healthcheck timers — no D-Bus bridging needed.
   systemd.tmpfiles.rules = [
-    "d /run/bwrap-podman 0755 bwrap-podman podman-dev -"
+    "d /run/bwrap-podman 0775 bwrap-podman podman-dev -"
   ];
 
-  systemd.sockets.bwrap-podman = {
+  systemd.user.sockets.bwrap-podman = {
     wantedBy = ["sockets.target"];
+    unitConfig.ConditionUser = "bwrap-podman";
     socketConfig = {
       ListenStream = "/run/bwrap-podman/podman.sock";
       SocketMode = "0666";
-      SocketUser = "bwrap-podman";
-      SocketGroup = "podman-dev";
     };
   };
 
-  systemd.services.bwrap-podman = {
+  systemd.user.services.bwrap-podman = {
     requires = ["bwrap-podman.socket"];
+    unitConfig.ConditionUser = "bwrap-podman";
     serviceConfig = {
-      User = "bwrap-podman";
-      Group = "podman-dev";
       Type = "simple";
       ExecStart = "${pkgs.podman}/bin/podman system service --time=0";
       Environment = [
-        "HOME=/var/lib/bwrap-podman"
-        "XDG_RUNTIME_DIR=/run/bwrap-podman"
         "PATH=/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin"
         "CONTAINERS_CONF=/etc/bwrap-podman/containers.conf"
       ];
-      # Restrict filesystem: podman can ONLY access /code for volume mounts.
-      # ProtectHome hides /home, /root, and /run/user entirely.
-      ProtectHome = true;
-      BindPaths = ["/code"];
     };
   };
 
-  # containers.conf for bwrap-podman: use cgroupfs since there's no
-  # systemd user session for this system user.
+  # containers.conf for bwrap-podman
   environment.etc."bwrap-podman/containers.conf".text = ''
     [engine]
     cgroup_manager = "cgroupfs"
