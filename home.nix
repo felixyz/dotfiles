@@ -307,6 +307,41 @@ in {
     };
   };
 
+  programs.ghostty = {
+    enable = true;
+    package = null; # installed system-wide
+    enableFishIntegration = true;
+    systemd.enable = false;
+    installBatSyntax = false;
+    settings = {
+      command = "${pkgs.fish}/bin/fish";
+      maximize = true;
+      font-family = "Hack Nerd Font";
+      font-size = 11;
+      background = alacritty_colors.primary.background;
+      foreground = alacritty_colors.primary.foreground;
+      palette = let
+        c = alacritty_colors;
+      in [
+        "0=${c.normal.black}"
+        "1=${c.normal.red}"
+        "2=${c.normal.green}"
+        "3=${c.normal.yellow}"
+        "4=${c.normal.blue}"
+        "5=${c.normal.magenta}"
+        "6=${c.normal.cyan}"
+        "7=${c.normal.white}"
+        "8=${c.bright.black}"
+        "9=${c.bright.red}"
+        "10=${c.bright.green}"
+        "11=${c.bright.yellow}"
+        "12=${c.bright.blue}"
+        "13=${c.bright.magenta}"
+        "14=${c.bright.cyan}"
+        "15=${c.bright.white}"
+      ];
+    };
+  };
   programs.tmux = {
     enable = true;
 
