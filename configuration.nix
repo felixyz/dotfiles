@@ -163,7 +163,6 @@
 
   services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
-  services.desktopManager.plasma6.enable = true;
   programs.ssh.askPassword = lib.mkForce "${pkgs.seahorse}/libexec/seahorse/ssh-askpass";
   services.xserver.xkb.options = "ctrl:swapcaps";
 
@@ -249,30 +248,26 @@
 
     gnomeExtensions.appindicator
     gnomeExtensions.cronomix
+    gnomeExtensions.paperwm
     discord
     earlyoom
     exercism
-    #eyedropper
     file
     firefox
-    #gimp
+    ghostty
     gnome-tweaks
     gnumake
     goldendict-ng
     ungoogled-chromium
-    # inkscape
     joplin-desktop
     libreoffice
-    #ngrok
     openfortivpn
-    #pijul
     # planify
     # ripcord
     #remmina
 
     slack
     socat # bidirectional data transfer (for sandboxing)
-    #speedcrunch
     spotify
     squid # HTTP proxy for domain filtering (for sandboxing)
     sublime-merge
@@ -281,7 +276,6 @@
     unixtools.ping
     #vlc
     wget
-    # zoom-us
 
     # niri environment
     # niri

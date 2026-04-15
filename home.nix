@@ -1,16 +1,15 @@
 {
   config,
   pkgs,
-  lib,
   ...
 }: let
   # Separate nixpkgs pin for packages where we want a newer version
   # than the system channel provides. Update the sha256 to bump.
-  nixpkgs-latest = import (builtins.fetchTarball {
+  nixpkgs-latest = import (fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/nixpkgs-unstable.tar.gz";
     sha256 = "1sxhlp1khk9ifh24lcg5qland4pg056l5jhyfw8xq3qmpavf390x";
   }) {config.allowUnfree = true;};
-  alacritty_colors = builtins.fromTOML (builtins.readFile ./melange_dark.toml);
+  alacritty_colors = fromTOML (builtins.readFile ./melange_dark.toml);
   claude-code-latest = pkgs.stdenv.mkDerivation {
     pname = "claude-code";
     version = "2.1.107";
@@ -79,7 +78,6 @@ in {
     diff-so-fancy
     difftastic
     dive
-    #eza
     fastfetch
     fd # Simple, fast and user-friendly alternative to find
     fff
@@ -93,19 +91,20 @@ in {
     jujutsu
     jq
     lazygit
+    lsof
     mergiraf # syntax-aware git merge driver
     moreutils
+    nodejs # npx needed for chrome-devtools MCP
     ngrok
     pgcli
     pgformatter
-    pijul
     procs
     python313
     ripgrep
     scc
     shellcheck
     tree
-    #vscode
+    wl-clipboard # wl-paste/wl-copy for Wayland clipboard (image paste in Claude)
     xclip
     (google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.gke-gcloud-auth-plugin])
     pkgs.nerd-fonts.hack
@@ -144,10 +143,12 @@ in {
     k = "kubectl";
     ks = "kubectl -n staging";
     kp = "kubectl -n production";
-    dokku = "~/.dokku/contrib/dokku_client.sh";
     dk = "~/.dokku/contrib/dokku_client.sh";
+    dokku = "~/.dokku/contrib/dokku_client.sh";
+    dv = "devenv";
     jean-claude = "bwrap-sandbox $(command -v claude) --dangerously-skip-permissions";
-    jcd = "env DOCKER_HOST=unix:///run/bwrap-podman/podman.sock CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman";
+    jcd = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote";
+    jcd-nuke = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote rm -af";
   };
 
   programs.git = {
@@ -193,13 +194,6 @@ in {
       name = "Felix Holmgren";
     };
   };
-
-  #programs = {
-  #exa = {
-  #enable = true;
-  #enableAliases = true;
-  #};
-  #};
 
   programs.fish = {
     enable = true;
@@ -377,8 +371,13 @@ in {
     prefix = "C-a";
     clock24 = true;
     escapeTime = 0;
+    historyLimit = 10000;
     extraConfig = ''
-      set-option -ga terminal-overrides ",xterm-256color:Tc"
+      # sync: buffers TUI output to reduce flicker (e.g. process-compose).
+      # Won't fully work until bubbletea emits sync sequences. Track:
+      #   https://github.com/charmbracelet/bubbletea/issues/850
+      #   https://github.com/charmbracelet/bubbletea/pull/1027
+      set -as terminal-features ",xterm-256color:RGB:sync"
       set -s default-terminal "xterm-256color"
       set -g mouse on
       set -g focus-events off
