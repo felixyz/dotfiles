@@ -342,6 +342,35 @@ in {
       ];
     };
   };
+
+  dconf.settings = {
+    "org/gnome/shell" = {
+      enabled-extensions = [
+        "paperwm@paperwm.github.com"
+        "appindicatorsupport@rgcjonas.gmail.com"
+      ];
+    };
+
+    # PaperWM overrides these at runtime, but setting them here avoids
+    # a flash of wrong behavior before the extension loads
+    "org/gnome/mutter" = {
+      workspaces-only-on-primary = false;
+      edge-tiling = false;
+      attach-modal-dialogs = false;
+      dynamic-workspaces = true;
+    };
+
+    "org/gnome/shell/extensions/paperwm" = {
+      selection-border-size = 3;
+      selection-border-radius-top = 5;
+      selection-border-radius-bottom = 0;
+      window-gap = 5;
+      horizontal-margin = 0;
+      vertical-margin = 0;
+      vertical-margin-bottom = 0;
+    };
+  };
+
   programs.tmux = {
     enable = true;
 
