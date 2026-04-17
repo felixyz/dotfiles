@@ -5,22 +5,14 @@
 #
 # Usage: bwrap-sandbox <command> [args...]
 #
-# The sandbox provides:
-#   - Read-only access to /nix/store (all binaries/libraries)
-#   - Read-only access to system and user nix profiles (PATH works normally)
-#   - NO direct network access (--unshare-net)
-#   - Network only via squid proxy through a unix socket bridge (mandatory)
-#   - Read-write access to the current directory (your project)
-#   - Read-only access to ~/.claude (subdirs selectively writable)
-#   - Read-only access to ~/.claude.json
-#   - No access to ~/.ssh, ~/.aws, ~/.gnupg, browser profiles, etc.
+# Two personas with different ~/.claude scoping (see mount strategy below):
+# "claude" and "opencode", auto-detected from the command basename or set
+# explicitly via BWRAP_PERSONA.
 #
-# Domain allowlists:
+# Domain allowlists (merged at startup into an immutable snapshot):
 #   Global:      ~/.config/bwrap-sandbox/allowed-hosts.txt
-#   Per-project:  ./.sandbox/allowed-hosts (in project directory, read at startup)
-#
-# Add a host on the fly (from another terminal):
-#   bwrap-allow-host <domain>
+#   Per-project: ./.sandbox/allowed-hosts
+# Add a host on the fly from another terminal: bwrap-allow-host <domain>
 
 set -euo pipefail
 
@@ -29,21 +21,38 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
+# Fail-closed persona detection: unknown commands error out rather than
+# defaulting to the more-permissive "claude" scoping.
+if [ -z "${BWRAP_PERSONA:-}" ]; then
+  case "$(basename -- "$1")" in
+    claude) BWRAP_PERSONA=claude ;;
+    opencode) BWRAP_PERSONA=opencode ;;
+    *)
+      echo "Error: cannot auto-detect persona from command '$(basename -- "$1")'" >&2
+      echo "       set BWRAP_PERSONA=claude or BWRAP_PERSONA=opencode explicitly" >&2
+      exit 1
+      ;;
+  esac
+fi
+
 PROJECT_DIR="$(realpath "$(pwd)")"
 
-# Guard against dangerous PROJECT_DIR values (allowlist, not blocklist)
-#case "$PROJECT_DIR" in
-  #"$HOME"/.ssh*|"$HOME"/.gnupg*|"$HOME"/.aws*|"$HOME"/.config/secrets*)
-    #echo "Error: refusing to sandbox inside sensitive directory $PROJECT_DIR" >&2
-    #exit 1
-    #;;
-  #/code/*)
-    #;; # OK — shared code directory
-  #*)
-    #echo "Error: PROJECT_DIR must be under \$HOME or /code (got $PROJECT_DIR)" >&2
-    #exit 1
-    #;;
-#esac
+# PROJECT_DIR is bind-mounted writable, so only run from explicitly project-ish
+# locations. Override with BWRAP_ALLOW_ANY_DIR=1 for one-off experiments.
+if [ "${BWRAP_ALLOW_ANY_DIR:-0}" != "1" ]; then
+  case "$PROJECT_DIR" in
+    "$HOME"/code|"$HOME"/code/*|\
+    "$HOME"/dotfiles|"$HOME"/dotfiles/*|\
+    /code|/code/*)
+      ;;
+    *)
+      echo "Error: refusing to sandbox outside project roots: $PROJECT_DIR" >&2
+      echo "       allowed: ~/code, ~/dotfiles, /code" >&2
+      echo "       override with BWRAP_ALLOW_ANY_DIR=1" >&2
+      exit 1
+      ;;
+  esac
+fi
 
 GLOBAL_ALLOWLIST="$HOME/.config/bwrap-sandbox/allowed-hosts.txt"
 PROJECT_ALLOWLIST="$PROJECT_DIR/.sandbox/allowed-hosts"
@@ -151,7 +160,6 @@ http_port $SQUID_PORT
 access_log stdio:$SANDBOX_DIR/access.log
 cache_log $SANDBOX_DIR/cache.log
 pid_filename $SANDBOX_DIR/squid.pid
-cache_dir null $SANDBOX_DIR
 coredump_dir $SANDBOX_DIR
 cache deny all
 EOF
@@ -261,29 +269,98 @@ INNEREOF
 chmod +x "$INNER_SCRIPT"
 
 # --- ~/.claude mount strategy ---
-# Mount ~/.claude read-only, then selectively bind each existing subdirectory
-# read-write. This keeps top-level files (credentials, settings, etc.) read-only
-# without needing to know their names, while allowing Claude to write to its
-# operational subdirectories (sessions, cache, etc.).
-CLAUDE_DIR_ARGS=(--ro-bind "$HOME/.claude" "$HOME/.claude")
-# .credentials.json must be writable so OAuth token refresh can persist
-if [ -f "$HOME/.claude/.credentials.json" ]; then
-  CLAUDE_DIR_ARGS+=(--bind "$HOME/.claude/.credentials.json" "$HOME/.claude/.credentials.json")
-fi
-CLAUDE_RO_SUBDIRS=("plugins")
-for subdir in "$HOME/.claude"/*/; do
-  [ -d "$subdir" ] || continue
-  dirname=$(basename "$subdir")
-  ro=false
-  for ro_dir in "${CLAUDE_RO_SUBDIRS[@]}"; do
-    [ "$dirname" = "$ro_dir" ] && ro=true && break
-  done
-  if [ "$ro" = true ]; then
-    CLAUDE_DIR_ARGS+=(--ro-bind "$subdir" "$subdir")
-  else
-    CLAUDE_DIR_ARGS+=(--bind "$subdir" "$subdir")
+CLAUDE_DIR_ARGS=()
+CLAUDE_JSON_ARGS=()
+case "$BWRAP_PERSONA" in
+  claude)
+    # Parent ro-bind caps top-level creation; subdirs punched through
+    # writable except plugins/ which is immutable operational state.
+    CLAUDE_DIR_ARGS=(--ro-bind "$HOME/.claude" "$HOME/.claude")
+    if [ -f "$HOME/.claude/.credentials.json" ]; then
+      CLAUDE_DIR_ARGS+=(--bind "$HOME/.claude/.credentials.json" "$HOME/.claude/.credentials.json")
+    fi
+    CLAUDE_RO_SUBDIRS=("plugins")
+    for subdir in "$HOME/.claude"/*/; do
+      [ -d "$subdir" ] || continue
+      dirname=$(basename "$subdir")
+      ro=false
+      for ro_dir in "${CLAUDE_RO_SUBDIRS[@]}"; do
+        [ "$dirname" = "$ro_dir" ] && ro=true && break
+      done
+      if [ "$ro" = true ]; then
+        CLAUDE_DIR_ARGS+=(--ro-bind "$subdir" "$subdir")
+      else
+        CLAUDE_DIR_ARGS+=(--bind "$subdir" "$subdir")
+      fi
+    done
+    # .claude.json holds MCP config, project history, etc. — claude CLI only.
+    if [ -f "$HOME/.claude.json" ]; then
+      CLAUDE_JSON_ARGS=(--bind "$HOME/.claude.json" "$HOME/.claude.json")
+    fi
+    ;;
+  opencode)
+    # Minimal surface: opencode-claude-auth plugin reads .credentials.json,
+    # and Claude-format skills are auto-discovered from ~/.claude/skills/.
+    # Both ro — the plugin's writeBackCredentials() EROFSes silently and
+    # opencode persists refreshed tokens to ~/.local/share/opencode/auth.json
+    # instead; the stale refresh token on disk keeps working until it
+    # expires upstream.
+    # Skills are trusted code (model instructions + bash tool access); treat
+    # ~/.claude/skills/ like $PATH.
+    if [ -f "$HOME/.claude/.credentials.json" ]; then
+      CLAUDE_DIR_ARGS+=(--ro-bind "$HOME/.claude/.credentials.json" "$HOME/.claude/.credentials.json")
+    fi
+    if [ -d "$HOME/.claude/skills" ]; then
+      CLAUDE_DIR_ARGS+=(--ro-bind "$HOME/.claude/skills" "$HOME/.claude/skills")
+    fi
+    ;;
+  *)
+    echo "Error: unknown BWRAP_PERSONA=$BWRAP_PERSONA (expected: claude|opencode)" >&2
+    exit 1
+    ;;
+esac
+
+# --- opencode mount strategy ---
+# ro-bind parents cap top-level creation; specific children get writable
+# binds only where opencode genuinely needs runtime writes.
+OPENCODE_DIR_ARGS=()
+if [ "$BWRAP_PERSONA" = "opencode" ]; then
+  # Contents are Nix-managed symlinks; opencode never writes here.
+  if [ -d "$HOME/.config/opencode" ]; then
+    OPENCODE_DIR_ARGS+=(--ro-bind "$HOME/.config/opencode" "$HOME/.config/opencode")
   fi
-done
+
+  # Writable: OAuth tokens, sessions DB, current-session log.
+  # Tmpfs-overlayed: snapshot/ and storage/ — opencode's internal git repo
+  # and session_diff dir. Writing through to host would let a compromised
+  # agent poison state that future sessions load, so writes go to a
+  # per-invocation tmpfs and vanish on exit. Undo still works within a
+  # session; cross-session history doesn't.
+  # Read-only: tool-output/ — agent can read its past outputs but not
+  # poison them.
+  if [ -d "$HOME/.local/share/opencode" ]; then
+    OPENCODE_DIR_ARGS+=(--ro-bind "$HOME/.local/share/opencode" "$HOME/.local/share/opencode")
+    for writable_file in auth.json opencode-stable.db opencode-stable.db-shm opencode-stable.db-wal; do
+      target="$HOME/.local/share/opencode/$writable_file"
+      if [ -f "$target" ]; then
+        OPENCODE_DIR_ARGS+=(--bind "$target" "$target")
+      fi
+    done
+    if [ -d "$HOME/.local/share/opencode/log" ]; then
+      OPENCODE_DIR_ARGS+=(--bind "$HOME/.local/share/opencode/log" "$HOME/.local/share/opencode/log")
+    fi
+    OPENCODE_DIR_ARGS+=(--tmpfs "$HOME/.local/share/opencode/snapshot")
+    OPENCODE_DIR_ARGS+=(--tmpfs "$HOME/.local/share/opencode/storage")
+  fi
+
+  # Shared with host opencode runs — a writable bind would let the agent
+  # poison node_modules/ or drop shims in bin/ that the next unsandboxed
+  # invocation executes as the user. packages/ (plugin/LSP staging) is
+  # absent from writes; reinforced by OPENCODE_DISABLE_LSP_DOWNLOAD below.
+  if [ -d "$HOME/.cache/opencode" ]; then
+    OPENCODE_DIR_ARGS+=(--ro-bind "$HOME/.cache/opencode" "$HOME/.cache/opencode")
+  fi
+fi
 
 # Run bwrap (not exec, so cleanup trap fires on exit)
 bwrap \
@@ -304,8 +381,9 @@ bwrap \
   --bind "$PROJECT_DIR" "$PROJECT_DIR" \
   --bind "$SANDBOX_DIR/devenv-state" "$PROJECT_DIR/.devenv/state" \
   ${BWRAP_DEVENV_VENV_ARGS[@]+"${BWRAP_DEVENV_VENV_ARGS[@]}"} \
-  "${CLAUDE_DIR_ARGS[@]}" \
-  --bind "$HOME/.claude.json" "$HOME/.claude.json" \
+  ${CLAUDE_DIR_ARGS[@]+"${CLAUDE_DIR_ARGS[@]}"} \
+  ${CLAUDE_JSON_ARGS[@]+"${CLAUDE_JSON_ARGS[@]}"} \
+  ${OPENCODE_DIR_ARGS[@]+"${OPENCODE_DIR_ARGS[@]}"} \
   --tmpfs "$PROJECT_DIR/.sandbox" \
   --ro-bind "$SANDBOX_DIR" "$SANDBOX_DIR" \
   --bind /run/bwrap-podman /run/bwrap-podman \
@@ -321,7 +399,7 @@ bwrap \
   --unshare-ipc \
   --die-with-parent \
   --setenv HOME "$HOME" \
-  --setenv PATH "$HOME/.nix-profile/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/bin:/bin" \
+  --setenv PATH "${PATH}:$HOME/.nix-profile/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/bin:/bin" \
   --setenv TERM "$TERM" \
   ${WAYLAND_DISPLAY:+--setenv WAYLAND_DISPLAY "$WAYLAND_DISPLAY"} \
   --setenv HTTP_PROXY "http://127.0.0.1:$INNER_PROXY_PORT" \
@@ -339,5 +417,6 @@ bwrap \
   --setenv BWRAP_SANDBOX_DIR "$SANDBOX_DIR" \
   --setenv BWRAP_PROXY_PORT "$INNER_PROXY_PORT" \
   --setenv BWRAP_SOCKET_PATH "$SOCKET_PATH" \
+  --setenv OPENCODE_DISABLE_LSP_DOWNLOAD "true" \
   --chdir "$PROJECT_DIR" \
   -- "$INNER_SCRIPT" "$@"

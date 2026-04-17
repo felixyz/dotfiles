@@ -5,10 +5,31 @@
 }: let
   # Separate nixpkgs pin for packages where we want a newer version
   # than the system channel provides. Update the sha256 to bump.
-  nixpkgs-latest = import (fetchTarball {
+  nixpkgs-latest-base = import (fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/nixpkgs-unstable.tar.gz";
-    sha256 = "1sxhlp1khk9ifh24lcg5qland4pg056l5jhyfw8xq3qmpavf390x";
+    sha256 = "19mppaiq05h4xrpch4i0jkkca4nnfdksc2fkhssplawggsj57id6";
   }) {config.allowUnfree = true;};
+  # Override nixpkgs (stuck at 0.7.3) — older versions still trigger the
+  # "third-party app" billing notice. Fetch the prebuilt npm tarball to
+  # bypass the upstream pnpm/tsc toolchain (same pattern as claude-code-latest).
+  opencode-claude-auth-latest = pkgs.stdenv.mkDerivation rec {
+    pname = "opencode-claude-auth";
+    version = "1.5.0";
+    src = pkgs.fetchzip {
+      url = "https://registry.npmjs.org/opencode-claude-auth/-/opencode-claude-auth-${version}.tgz";
+      hash = "sha256-wZat/OG/6dTIRO/HXq+xfXl7kgxTYCyVmI6JkAO9SIg=";
+    };
+    installPhase = ''
+      mkdir -p $out/lib/node_modules/opencode-claude-auth
+      cp -r dist opencode-claude-auth.js package.json \
+        $out/lib/node_modules/opencode-claude-auth/
+    '';
+  };
+  nixpkgs-latest =
+    nixpkgs-latest-base
+    // {
+      opencode-claude-auth = opencode-claude-auth-latest;
+    };
   alacritty_colors = fromTOML (builtins.readFile ./melange_dark.toml);
   claude-code-latest = pkgs.stdenv.mkDerivation {
     pname = "claude-code";
@@ -96,6 +117,8 @@ in {
     moreutils
     nodejs # npx needed for chrome-devtools MCP
     ngrok
+    nixpkgs-latest.opencode
+    nixpkgs-latest.opencode-claude-auth
     pgcli
     pgformatter
     procs
@@ -146,9 +169,10 @@ in {
     dk = "~/.dokku/contrib/dokku_client.sh";
     dokku = "~/.dokku/contrib/dokku_client.sh";
     dv = "devenv";
-    jean-claude = "bwrap-sandbox $(command -v claude) --dangerously-skip-permissions";
-    jcd = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote";
-    jcd-nuke = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote rm -af";
+    jean-claude = "BWRAP_PERSONA=claude bwrap-sandbox $(command -v claude) --dangerously-skip-permissions";
+    jean-luc = "BWRAP_PERSONA=opencode bwrap-sandbox $(command -v opencode) --agent yolo";
+    sbd = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote";
+    sb-nuke = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote rm -af";
   };
 
   programs.git = {
@@ -187,6 +211,16 @@ in {
       email = "felix@hinterstellar.io";
     };
   };
+
+  # Plugin file is a tiny re-export so opencode treats claude-auth as a
+  # local plugin (from plugins/) instead of fetching "@latest" from npm.
+  # This pins the version to whatever Nix resolves for opencode-claude-auth.
+  xdg.configFile."opencode/opencode.json".source = ./opencode/config.json;
+  xdg.configFile."opencode/plugins/claude-auth.js".text = ''
+    export { ClaudeAuthPlugin, default } from "${nixpkgs-latest.opencode-claude-auth}/lib/node_modules/opencode-claude-auth/dist/index.js";
+  '';
+  xdg.configFile."opencode/agents/yolo.md".source = ./opencode/yolo.md;
+  xdg.configFile."opencode/tui.json".source = ./opencode/tui.json;
 
   programs.jujutsu.settings = {
     user = {
