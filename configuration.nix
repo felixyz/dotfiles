@@ -200,14 +200,14 @@
   services.keyd = {
     enable = true;
     keyboards.laptop = {
-      ids = [ "0001:0001" ];
+      ids = ["0001:0001"];
       settings.main = {
         leftalt = "layer(meta)";
         leftmeta = "layer(alt)";
       };
     };
     keyboards.mouse = {
-      ids = [ "25a7:fa10" ];
+      ids = ["25a7:fa10"];
       settings.main = {
         mouseback = "M-,";
         mouseforward = "M-.";
@@ -243,8 +243,18 @@
     createHome = true;
   };
 
-  users.users.bwrap-podman.subUidRanges = [{startUid = 200000; count = 65536;}];
-  users.users.bwrap-podman.subGidRanges = [{startGid = 200000; count = 65536;}];
+  users.users.bwrap-podman.subUidRanges = [
+    {
+      startUid = 200000;
+      count = 65536;
+    }
+  ];
+  users.users.bwrap-podman.subGidRanges = [
+    {
+      startGid = 200000;
+      count = 65536;
+    }
+  ];
   users.users.bwrap-podman.linger = true;
 
   users.extraUsers.felix = {
@@ -345,8 +355,18 @@
   };
 
   # Rootless podman needs subuid/subgid ranges for user namespaces
-  users.users.felix.subUidRanges = [{startUid = 100000; count = 65536;}];
-  users.users.felix.subGidRanges = [{startGid = 100000; count = 65536;}];
+  users.users.felix.subUidRanges = [
+    {
+      startUid = 100000;
+      count = 65536;
+    }
+  ];
+  users.users.felix.subGidRanges = [
+    {
+      startGid = 100000;
+      count = 65536;
+    }
+  ];
 
   programs.ssh.extraConfig = ''
   '';
