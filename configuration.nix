@@ -64,21 +64,32 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 8;
 
-  zramSwap = {
-    enable = true;
-    memoryPercent = 25;
-    algorithm = "zstd";
-  };
+  # zswap (kernel-integrated compressed cache in front of disk swap) + a
+  # modest swap file on the ext4 root. Replaces the previous zram-only setup:
+  # zswap participates in reclaim and evicts cold compressed pages to disk,
+  # avoiding zram's hard-limit brownouts and LRU inversion.
+  swapDevices = [
+    {
+      device = "/swapfile";
+      size = 16 * 1024;
+    }
+  ];
+
+  boot.kernelParams = [
+    "zswap.enabled=1"
+    "zswap.compressor=zstd"
+    "zswap.zpool=zsmalloc" # preferred allocator (vs z3fold/zbud)
+    "zswap.max_pool_percent=20"
+  ];
 
   boot.kernel.sysctl = {
-    "vm.swappiness" = 100; # aggressively use swap as pressure buffer, high swappiness with zram is good
+    "vm.swappiness" = 100; # compressed zswap tier is cheap; bias reclaim toward anon pages
     "vm.watermark_scale_factor" = 200; # start reclaim earlier
-    "vm.page-cluster" = 0; # lower latency reclaim
+    "vm.page-cluster" = 0; # NVMe + compressed: no readahead clustering
   };
 
   # --- OOM setup
   systemd.oomd.enable = true;
-
   systemd.oomd.settings.OOM = {
     DefaultMemoryPressureLimit = "60%";
     DefaultMemoryPressureDurationSec = "30s";
@@ -250,7 +261,6 @@
     gnomeExtensions.cronomix
     gnomeExtensions.paperwm
     discord
-    earlyoom
     exercism
     file
     firefox
