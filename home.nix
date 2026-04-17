@@ -12,10 +12,10 @@
   alacritty_colors = fromTOML (builtins.readFile ./melange_dark.toml);
   claude-code-latest = pkgs.stdenv.mkDerivation {
     pname = "claude-code";
-    version = "2.1.107";
+    version = "2.1.112";
     src = pkgs.fetchzip {
-      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.107.tgz";
-      hash = "sha256-FpJ7grsXbBJxzbqSZTN6uICd1sGxizMEpHbs1n9yW3s=";
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.112.tgz";
+      hash = "sha256-SJJqU7XHbu9IRGPMJNUg6oaMZiQUKqJhI2wm7BnR1gs=";
     };
     nativeBuildInputs = [pkgs.makeWrapper];
     installPhase = ''
