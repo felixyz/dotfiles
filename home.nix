@@ -31,20 +31,45 @@
       opencode-claude-auth = opencode-claude-auth-latest;
     };
   alacritty_colors = fromTOML (builtins.readFile ./melange_dark.toml);
-  claude-code-latest = pkgs.stdenv.mkDerivation {
-    pname = "claude-code";
-    version = "2.1.112";
+  # Since 2.1.113-ish, @anthropic-ai/claude-code is a thin wrapper whose
+  # postinstall copies a per-platform bun-compiled native binary from an
+  # optionalDependency over bin/claude.exe. We skip the wrapper and fetch the
+  # linux-x64 native package directly.
+  #
+  # The binary must be left BYTE-IDENTICAL — bun's standalone-executable
+  # detection reads a magic footer at the end of the file, and any patchelf
+  # (incl. autoPatchelfHook) shifts that footer and silently downgrades the
+  # binary to plain bun CLI mode. So we wrap it in buildFHSEnv, which provides
+  # /lib64/ld-linux-x86-64.so.2 via bwrap instead of touching the ELF.
+  claude-code-bin = pkgs.stdenv.mkDerivation {
+    pname = "claude-code-bin";
+    version = "2.1.170";
     src = pkgs.fetchzip {
-      url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.112.tgz";
-      hash = "sha256-SJJqU7XHbu9IRGPMJNUg6oaMZiQUKqJhI2wm7BnR1gs=";
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.170.tgz";
+      hash = "sha256-boRtO4oV/PP30bB0wWKYyuR2woZV3joAvqyxpiL6txs=";
     };
-    nativeBuildInputs = [pkgs.makeWrapper];
+    dontStrip = true;
+    dontFixup = true;
+    dontPatchELF = true;
     installPhase = ''
-      mkdir -p $out/lib/claude-code $out/bin
-      cp -r . $out/lib/claude-code/
-      makeWrapper ${pkgs.nodejs}/bin/node $out/bin/claude \
-        --add-flags "$out/lib/claude-code/cli.js"
+      install -Dm755 claude $out/bin/claude
     '';
+  };
+  claude-code-latest = pkgs.buildFHSEnv {
+    name = "claude";
+    targetPkgs = pkgs: [pkgs.glibc claude-code-bin];
+    runScript = "claude";
+    # buildFHSEnv rebuilds /etc from a fixed whitelist of host symlinks that
+    # omits /etc/containers. Without it, podman (docker compat) can't read
+    # `compose_providers` from containers.conf, so `docker compose` fails to
+    # find a provider inside the FHS env. Re-expose it the same way the outer
+    # sandbox does (scripts/bwrap-sandbox.sh). extraBwrapArgs run after the
+    # internal `--tmpfs /etc`, so this symlink survives.
+    extraBwrapArgs = [
+      "--symlink"
+      "/.host-etc/containers"
+      "/etc/containers"
+    ];
   };
 in {
   imports = [
