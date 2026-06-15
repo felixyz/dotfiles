@@ -149,9 +149,11 @@ in {
     diff-so-fancy
     difftastic
     dive
+    dnsutils # dig, decisions/0011
     fastfetch
     fd # Simple, fast and user-friendly alternative to find
     fff
+    flyctl
     fx # Terminal JSON viewer
     fzf
     fontconfig
@@ -178,6 +180,7 @@ in {
     shellcheck
     tidewave-cli
     tree
+    wireguard-tools # wg/wg-quick, see decisions/0011
     wl-clipboard # wl-paste/wl-copy for Wayland clipboard (image paste in Claude)
     xclip
     (google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.gke-gcloud-auth-plugin])
