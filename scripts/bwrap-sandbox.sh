@@ -56,7 +56,12 @@ fi
 
 GLOBAL_ALLOWLIST="$HOME/.config/bwrap-sandbox/allowed-hosts.txt"
 PROJECT_ALLOWLIST="$PROJECT_DIR/.sandbox/allowed-hosts"
-SANDBOX_DIR=$(mktemp -d --tmpdir="$HOME/.cache" "bwrap-sandbox.$(basename "$PROJECT_DIR").XXXXXX")
+# Encode PROJECT_DIR into the runtime dir name so bwrap-allow-{host,port}
+# can target the right sandbox unambiguously (basenames can collide between
+# unrelated projects). '=' substitutes for '/' since it never appears in
+# path components on this system.
+PROJECT_DIR_TAG="${PROJECT_DIR//\//=}"
+SANDBOX_DIR=$(mktemp -d --tmpdir="$HOME/.cache" "bwrap-sandbox.${PROJECT_DIR_TAG}.XXXXXX")
 # Sandbox gets its own .devenv/state (so postgres dir is absent and initdb runs),
 # but the host's venv is bind-mounted back in to avoid re-downloading packages.
 mkdir -p "$SANDBOX_DIR/devenv-state"

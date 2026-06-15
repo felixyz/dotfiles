@@ -44,9 +44,18 @@ else
 fi
 
 # Also append to any running squid's snapshot allowlist and reload.
-# The snapshot is in $HOME/.cache/bwrap-sandbox.*/allowed-hosts.txt.
+# Per-project changes target only sandboxes running for $PWD; -g changes
+# are global so we patch every running sandbox. Encoding matches
+# bwrap-sandbox.sh's PROJECT_DIR_TAG ('/' -> '=').
+if [ "$GLOBAL" = true ]; then
+  SNAPSHOT_GLOB="$HOME/.cache/bwrap-sandbox.*/allowed-hosts.txt"
+else
+  PROJECT_DIR_TAG="$(realpath "$PWD")"
+  PROJECT_DIR_TAG="${PROJECT_DIR_TAG//\//=}"
+  SNAPSHOT_GLOB="$HOME/.cache/bwrap-sandbox.${PROJECT_DIR_TAG}.*/allowed-hosts.txt"
+fi
 UPDATED=false
-for snapshot in "$HOME/.cache"/bwrap-sandbox.*/allowed-hosts.txt; do
+for snapshot in $SNAPSHOT_GLOB; do
   [ -f "$snapshot" ] || continue
   if ! grep -qxF "$DOMAIN" "$snapshot" 2>/dev/null; then
     echo "$DOMAIN" >> "$snapshot"
@@ -56,7 +65,12 @@ done
 
 if [ "$UPDATED" = true ]; then
   RELOADED=0
-  for pidfile in "$HOME/.cache"/bwrap-sandbox.*/squid.pid; do
+  if [ "$GLOBAL" = true ]; then
+    PIDFILE_GLOB="$HOME/.cache/bwrap-sandbox.*/squid.pid"
+  else
+    PIDFILE_GLOB="$HOME/.cache/bwrap-sandbox.${PROJECT_DIR_TAG}.*/squid.pid"
+  fi
+  for pidfile in $PIDFILE_GLOB; do
     [ -f "$pidfile" ] || continue
     pid=$(cat "$pidfile" 2>/dev/null)
     [ -n "$pid" ] && kill -HUP "$pid" 2>/dev/null && RELOADED=$((RELOADED + 1))

@@ -29,9 +29,12 @@ else
   echo "Port $PORT already in $TARGET"
 fi
 
-# Start outside socat bridge for each active sandbox
+# Start outside socat bridge for each active sandbox running for $PWD.
+# Encoding matches bwrap-sandbox.sh's PROJECT_DIR_TAG ('/' -> '=').
+PROJECT_DIR_TAG="$(realpath "$PWD")"
+PROJECT_DIR_TAG="${PROJECT_DIR_TAG//\//=}"
 BRIDGED=0
-for sandbox_dir in "$HOME/.cache"/bwrap-sandbox.*/; do
+for sandbox_dir in "$HOME/.cache"/bwrap-sandbox."${PROJECT_DIR_TAG}".*/; do
   [ -d "$sandbox_dir" ] || continue
   # Check if this sandbox is still alive (squid running)
   pidfile="$sandbox_dir/squid.pid"
