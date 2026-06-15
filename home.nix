@@ -7,7 +7,7 @@
   # than the system channel provides. Update the sha256 to bump.
   nixpkgs-latest-base = import (fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/nixpkgs-unstable.tar.gz";
-    sha256 = "19mppaiq05h4xrpch4i0jkkca4nnfdksc2fkhssplawggsj57id6";
+    sha256 = "0681n9mr6kxz7wfyz88j4fn81brs2mbpvhdns7wim1s40hs7vq9l";
   }) {config.allowUnfree = true;};
   # Override nixpkgs (stuck at 0.7.3) — older versions still trigger the
   # "third-party app" billing notice. Fetch the prebuilt npm tarball to
