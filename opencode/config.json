@@ -5,5 +5,43 @@
       "command": ["alejandra", "$FILE"],
       "extensions": [".nix"]
     }
+  },
+  "provider": {
+    "tensorix": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Tensorix",
+      "options": {
+        "baseURL": "https://api.tensorix.ai/v1",
+        "apiKey": "{env:TENSORIX_API_KEY}"
+      },
+      "models": {
+        "qwen/qwen3-235b-a22b-2507": { "name": "Qwen3 235B A22B 2507" },
+        "qwen/qwen3-coder-30b-a3b-instruct": { "name": "Qwen3 Coder 30B A3B Instruct" },
+        "qwen/qwen3-vl-235b-a22b-instruct": { "name": "Qwen3-VL 235B A22B Instruct" },
+        "qwen/qwen-2.5-72b-instruct": { "name": "Qwen 2.5 72B Instruct" },
+        "qwen/qwen3.5-9b": { "name": "Qwen3.5 9B" },
+        "qwen/qwen3.5-122b-a10b": { "name": "Qwen3.5 122B A10B" },
+        "deepseek/deepseek-r1-0528": { "name": "DeepSeek R1 0528" },
+        "deepseek/deepseek-chat-v3.1": { "name": "DeepSeek Chat v3.1" },
+        "deepseek/deepseek-chat-v3-0324": { "name": "DeepSeek Chat v3 0324" },
+        "deepseek/deepseek-v3.2": { "name": "DeepSeek v3.2" },
+        "meta-llama/llama-4-maverick": { "name": "Llama 4 Maverick" },
+        "meta-llama/llama-3.3-70b-instruct": { "name": "Llama 3.3 70B Instruct" },
+        "mistralai/mixtral-8x22b-instruct": { "name": "Mixtral 8x22B Instruct" },
+        "minimax/minimax-m2": { "name": "MiniMax M2" },
+        "minimax/minimax-m2.1": { "name": "MiniMax M2.1" },
+        "minimax/minimax-m2.5": { "name": "MiniMax M2.5" },
+        "minimax/minimax-m2.7": { "name": "MiniMax M2.7" },
+        "openai/gpt-oss-20b": { "name": "GPT-OSS 20B" },
+        "openai/gpt-oss-120b": { "name": "GPT-OSS 120B" },
+        "z-ai/glm-4.6": { "name": "GLM 4.6" },
+        "z-ai/glm-4.7": { "name": "GLM 4.7" },
+        "z-ai/glm-4.7-fallback": { "name": "GLM 4.7 Fallback" },
+        "z-ai/glm-5": { "name": "GLM 5" },
+        "z-ai/glm-5.1": { "name": "GLM 5.1" },
+        "moonshotai/kimi-k2.5": { "name": "Kimi K2.5" },
+        "nvidia/nemotron-3-super-120b-a12b": { "name": "Nemotron 3 Super 120B A12B" }
+      }
+    }
   }
 }
