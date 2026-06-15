@@ -71,6 +71,27 @@
       "/etc/containers"
     ];
   };
+  # See decisions/0008. Bump: nix-prefetch-url the new musl asset,
+  # nix-hash --to-sri the result. tidewave_app versions independently of
+  # the :tidewave hex package.
+  tidewave-cli = pkgs.stdenv.mkDerivation rec {
+    pname = "tidewave-cli";
+    version = "0.4.3";
+    src = pkgs.fetchurl {
+      url = "https://github.com/tidewave-ai/tidewave_app/releases/download/v${version}/tidewave-cli-x86_64-unknown-linux-musl";
+      hash = "sha256-TRuoDUyHRXShQm/P1x9OtyAcU8pgw16oZy1TpvXL4UI=";
+    };
+    dontUnpack = true;
+    installPhase = ''
+      install -Dm755 $src $out/bin/tidewave
+    '';
+    meta = {
+      description = "Tidewave coding-agent companion CLI";
+      homepage = "https://tidewave.ai";
+      license = pkgs.lib.licenses.asl20;
+      platforms = ["x86_64-linux"];
+    };
+  };
 in {
   imports = [
     ./nvim
@@ -115,8 +136,12 @@ in {
     (writeShellScriptBin "bwrap-allow-host" (builtins.readFile ./scripts/bwrap-allow-host.sh))
     (writeShellScriptBin "bwrap-allow-port" (builtins.readFile ./scripts/bwrap-allow-port.sh))
     (writeShellScriptBin "podman-build" (builtins.readFile ./scripts/podman-build.sh))
+    (writeShellScriptBin "tidewave-init" (builtins.readFile ./scripts/tidewave-init.sh))
+    (writeShellScriptBin "tidewave-claude-sandboxed" (builtins.readFile ./scripts/tidewave-claude-sandboxed.sh))
+    (writeShellScriptBin "tidewave-opencode-sandboxed" (builtins.readFile ./scripts/tidewave-opencode-sandboxed.sh))
     awscli2
     bat
+    bun # Tidewave shells out to bun for claude-agent-acp; see decisions/0008
     claude-code-latest
     nixpkgs-latest.devenv
     nixpkgs-latest.signal-desktop
@@ -151,6 +176,7 @@ in {
     ripgrep
     scc
     shellcheck
+    tidewave-cli
     tree
     wl-clipboard # wl-paste/wl-copy for Wayland clipboard (image paste in Claude)
     xclip
@@ -175,6 +201,46 @@ in {
     EDITOR = "nvim";
     FZF_DEFAULT_COMMAND = "rg --files --follow";
     DOCKER_BUILD = "podman-build"; # dereferences symlinks in build context for podman compat
+  };
+
+  # See decisions/0008, 0009 and docs/tidewave-project-setup.md.
+  # CLAUDE_CODE_EXECUTABLE points at the sandboxed wrapper so tidewave-spawned
+  # claude runs inside bwrap-sandbox (threat-model parity with `jean-claude`).
+  # The wrapper also sidesteps the SDK's bundled native `claude` binary, which
+  # ships from claude-agent-sdk >= 0.2.119 and won't execute on NixOS (its
+  # interpreter /lib/ld-musl-x86_64.so.1 is absent — see decisions/0008).
+  systemd.user.services.tidewave = {
+    Unit.Description = "Tidewave coding-agent companion";
+    Service = {
+      ExecStart = "${tidewave-cli}/bin/tidewave --port 9832";
+      Environment = [
+        "CLAUDE_CODE_EXECUTABLE=${config.home.profileDirectory}/bin/tidewave-claude-sandboxed"
+      ];
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+    Install.WantedBy = ["default.target"];
+  };
+
+  # Tidewave hardcodes ~/.cache/tidewave/downloads/<asset-name> and
+  # downloads glibc-linked blobs that don't execute on NixOS. Shim those
+  # paths to nix-managed binaries. The TIDEWAVE_*_EXECUTABLE env vars the
+  # UI suggests are not honored by v0.4.3 — the CLI ignores them. If
+  # tidewave-cli bumps and new "cannot execute" errors appear, add the
+  # matching filename here.
+  home.file.".cache/tidewave/downloads/opencode-linux-x64-baseline-musl-1-4-7" = {
+    executable = true;
+    text = ''
+      #!/usr/bin/env bash
+      exec ${config.home.profileDirectory}/bin/tidewave-opencode-sandboxed "$@"
+    '';
+  };
+  home.file.".cache/tidewave/downloads/bun-linux-x64-musl-1-3-10" = {
+    executable = true;
+    text = ''
+      #!/usr/bin/env bash
+      exec ${config.home.profileDirectory}/bin/bun "$@"
+    '';
   };
 
   programs = {
