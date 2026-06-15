@@ -257,6 +257,7 @@ in {
     bux = "bundle exec";
     cat = "bat";
     gplease = "git push --no-verify --force-with-lease";
+    grr = "cd (git rev-parse --show-toplevel)";
     k = "kubectl";
     ks = "kubectl -n staging";
     kp = "kubectl -n production";
