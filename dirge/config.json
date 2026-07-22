@@ -1,0 +1,11 @@
+{
+  "provider": "tensorix",
+  "providers": {
+    "tensorix": {
+      "provider_type": "openai",
+      "base_url": "https://api.tensorix.ai/v1",
+      "api_key": "${TENSORIX_API_KEY}",
+      "model": "z-ai/glm-5.2"
+    }
+  }
+}

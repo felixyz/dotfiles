@@ -71,6 +71,28 @@
       "/etc/containers"
     ];
   };
+  # dirge — Rust coding agent. Static-pie musl binary, no FHS wrapper needed
+  # (unlike claude). Bump: set hash to pkgs.lib.fakeHash, `home-manager switch`,
+  # paste the "got:" hash. fetchzip NAR ≠ nix-prefetch-url --unpack here.
+  dirge = pkgs.stdenv.mkDerivation rec {
+    pname = "dirge";
+    version = "0.19.17";
+    src = pkgs.fetchzip {
+      url = "https://github.com/dirge-code/dirge/releases/download/v${version}/dirge-x86_64-unknown-linux-musl.tar.gz";
+      hash = "sha256-rk/AfctRmiIK3ZZf1gWZ9YUq74gCeu1+JcEbLFAq6Yk=";
+    };
+    dontStrip = true;
+    dontFixup = true;
+    dontPatchELF = true;
+    installPhase = ''
+      install -Dm755 dirge $out/bin/dirge
+    '';
+    meta = {
+      description = "Dirge coding agent";
+      homepage = "https://github.com/dirge-code/dirge";
+      platforms = ["x86_64-linux"];
+    };
+  };
   # See decisions/0008. Bump: nix-prefetch-url the new musl asset,
   # nix-hash --to-sri the result. tidewave_app versions independently of
   # the :tidewave hex package.
@@ -148,6 +170,7 @@ in {
     ctop
     diff-so-fancy
     difftastic
+    dirge
     dive
     dnsutils # dig, decisions/0011
     fastfetch
@@ -316,6 +339,9 @@ in {
   '';
   xdg.configFile."opencode/agents/yolo.md".source = ./opencode/yolo.md;
   xdg.configFile."opencode/tui.json".source = ./opencode/tui.json;
+
+  # dirge → Tensorix (OpenAI-compatible) for GLM; same endpoint/key as opencode.
+  xdg.configFile."dirge/config.json".source = ./dirge/config.json;
 
   programs.jujutsu.settings = {
     user = {
