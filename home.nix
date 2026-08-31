@@ -7,7 +7,7 @@
   # than the system channel provides. Update the sha256 to bump.
   nixpkgs-latest-base = import (fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/nixpkgs-unstable.tar.gz";
-    sha256 = "1lxfhfgiv1sz2v7fg43gny57sa6wf59n98q7ldsyb2p06f4sal7w";
+    sha256 = "06sil8mb0psrx1x49yfrxxr7sd6fqjz77amyx7bhr7rp3216gpyh";
   }) {config.allowUnfree = true;};
   # Override nixpkgs (stuck at 0.7.3) — older versions still trigger the
   # "third-party app" billing notice. Fetch the prebuilt npm tarball to
@@ -43,10 +43,10 @@
   # /lib64/ld-linux-x86-64.so.2 via bwrap instead of touching the ELF.
   claude-code-bin = pkgs.stdenv.mkDerivation {
     pname = "claude-code-bin";
-    version = "2.1.217";
+    version = "2.1.251";
     src = pkgs.fetchzip {
-      url = "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.217.tgz";
-      hash = "sha256-01mMm7ZV7mav8kBPXLyQmBWWuZL2Rtf5NXc9WgPEFZA=";
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.251.tgz";
+      hash = "sha256-CI6tK3vaQ27piP2BZvxfg2bh9EJdEQ9Mfa8MnhR1kpE=";
     };
     dontStrip = true;
     dontFixup = true;
@@ -98,10 +98,10 @@
   # the :tidewave hex package.
   tidewave-cli = pkgs.stdenv.mkDerivation rec {
     pname = "tidewave-cli";
-    version = "0.4.3";
+    version = "0.4.6";
     src = pkgs.fetchurl {
       url = "https://github.com/tidewave-ai/tidewave_app/releases/download/v${version}/tidewave-cli-x86_64-unknown-linux-musl";
-      hash = "sha256-TRuoDUyHRXShQm/P1x9OtyAcU8pgw16oZy1TpvXL4UI=";
+      hash = "sha256-+bDxiz93LDoBYFJdPc3hmWLCEqILnK6nIeNZS/fIfE0=";
     };
     dontUnpack = true;
     installPhase = ''
