@@ -279,7 +279,8 @@ CLAUDE_JSON_ARGS=()
 case "$BWRAP_PERSONA" in
   claude)
     # Parent ro-bind caps top-level creation; subdirs punched through
-    # writable except plugins/ which is immutable operational state.
+    # writable except plugins/ (code + manifests), of which only
+    # plugins/data/ is re-punched writable below.
     CLAUDE_DIR_ARGS=(--ro-bind "$HOME/.claude" "$HOME/.claude")
     if [ -f "$HOME/.claude/.credentials.json" ]; then
       CLAUDE_DIR_ARGS+=(--bind "$HOME/.claude/.credentials.json" "$HOME/.claude/.credentials.json")
@@ -298,6 +299,12 @@ case "$BWRAP_PERSONA" in
         CLAUDE_DIR_ARGS+=(--bind "$subdir" "$subdir")
       fi
     done
+    # plugins/ stays ro (cache/, marketplaces/, installed_plugins.json are
+    # code and manifests) but plugins/data/ is per-plugin scratch state
+    # that Claude Code mkdirs (CLAUDE_PLUGIN_DATA) before running any
+    # plugin hook. Later binds stack over the ro-bind above.
+    mkdir -p "$HOME/.claude/plugins/data"
+    CLAUDE_DIR_ARGS+=(--bind "$HOME/.claude/plugins/data" "$HOME/.claude/plugins/data")
     # .claude.json holds MCP config, project history, etc. — claude CLI only.
     if [ -f "$HOME/.claude.json" ]; then
       CLAUDE_JSON_ARGS=(--bind "$HOME/.claude.json" "$HOME/.claude.json")
