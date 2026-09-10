@@ -311,3 +311,5 @@ To remove Tidewave from a project:
 - Inside a bwrap sandbox (`jean-claude`/`jean-luc`): port 4000 is not
   auto-bridged. Run `bwrap-allow-port 4000` in a host shell before
   starting the sandboxed agent. Similarly for any custom `$PORT`.
+  Tidewave-launched sessions bridge `:9832` (the tidewave-ide MCP)
+  automatically; the app port still needs the allowlist entry.

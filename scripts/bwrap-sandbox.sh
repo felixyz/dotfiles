@@ -138,6 +138,7 @@ platform.claude.com
 .docker.io
 .registry-1.docker.io
 .production.cloudflare.docker.com
+.tidewave.ai
 BUILTIN
 cat "$GLOBAL_ALLOWLIST" >> "$SQUID_ALLOWLIST"
 if [ -f "$PROJECT_ALLOWLIST" ]; then
@@ -212,8 +213,17 @@ if [ "$SOCKET_READY" != true ]; then
 fi
 
 # --- Port bridging ---
-# Read .sandbox/allowed-ports and set up outside socat bridges for each port.
+# Bridge host localhost ports into the sandbox. Sources, merged and deduped:
+#   1. BWRAP_EXTRA_PORTS (space/comma separated) — set by launcher wrappers
+#      for ports every session of that kind needs (tidewave-*-sandboxed
+#      add 9832, the tidewave-cli MCP socket).
+#   2. Per-project .sandbox/allowed-ports (one port per line, # comments).
 # Each bridge: UNIX socket in SANDBOX_DIR -> host localhost:PORT
+BRIDGE_PORTS=()
+extra_ports="${BWRAP_EXTRA_PORTS:-}"
+for port in ${extra_ports//,/ }; do
+  [[ "$port" =~ ^[0-9]+$ ]] && BRIDGE_PORTS+=("$port")
+done
 SANDBOX_PORTS_FILE="$PROJECT_DIR/.sandbox/allowed-ports"
 if [ -f "$SANDBOX_PORTS_FILE" ]; then
   while IFS= read -r port; do
@@ -222,11 +232,14 @@ if [ -f "$SANDBOX_PORTS_FILE" ]; then
     port="${port%%#*}"  # strip inline comments
     port="${port// /}"  # strip whitespace
     [[ "$port" =~ ^[0-9]+$ ]] || continue
-    sock="$SANDBOX_DIR/port-$port.sock"
-    socat "UNIX-LISTEN:${sock},fork" "TCP:127.0.0.1:${port}" 2>/dev/null &
-    PIDS+=($!)
+    BRIDGE_PORTS+=("$port")
   done < "$SANDBOX_PORTS_FILE"
 fi
+for port in $(printf '%s\n' ${BRIDGE_PORTS[@]+"${BRIDGE_PORTS[@]}"} | sort -un); do
+  sock="$SANDBOX_DIR/port-$port.sock"
+  socat "UNIX-LISTEN:${sock},fork" "TCP:127.0.0.1:${port}" 2>/dev/null &
+  PIDS+=($!)
+done
 
 # --- Launch sandbox ---
 # The inner socat runs inside the sandbox, bridging localhost:INNER_PROXY_PORT

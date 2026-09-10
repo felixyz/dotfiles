@@ -63,10 +63,12 @@ endpoints bridged, not just one:
   `http://127.0.0.1:9832/socket/mcp-remote-client?sessionId=...`, and
   the Tidewave-Web MCP tools depend on that connection.
 
-The user manages `.sandbox/allowed-ports` per project; nothing in
-home.nix or `tidewave-init.sh` writes ports automatically. Documented
-here so the requirement is explicit when a session reports "Tidewave-Web
-MCP not connected" inside the sandbox.
+The user manages `.sandbox/allowed-ports` per project for the app
+port; nothing in home.nix or `tidewave-init.sh` writes ports
+automatically. Documented here so the requirement is explicit when a
+session reports "Tidewave-Web MCP not connected" inside the sandbox.
+
+Amended by decisions/0012, which bridges `:9832` automatically.
 
 ## Consequences
 
@@ -92,8 +94,8 @@ MCP not connected" inside the sandbox.
 - Auto-writing the per-project Phoenix port to `.sandbox/allowed-ports`
   in `tidewave-init.sh`: rejected because the port varies across
   projects and the user already maintains those files manually. The MCP
-  port (`9832`) would still need a separate global mechanism, which
-  bwrap-sandbox does not have.
+  port (`9832`) is bridged by every Tidewave-launched session instead
+  (decisions/0012).
 - `BWRAP_ALLOW_ANY_DIR=1` as a fallback for sessions launched outside
   the project-root allowlist: would defeat the safety check exactly when
   it matters (a sandbox rooted at `$HOME` mounts `$HOME` writable).
