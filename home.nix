@@ -43,10 +43,10 @@
   # /lib64/ld-linux-x86-64.so.2 via bwrap instead of touching the ELF.
   claude-code-bin = pkgs.stdenv.mkDerivation {
     pname = "claude-code-bin";
-    version = "2.1.251";
+    version = "2.1.258";
     src = pkgs.fetchzip {
-      url = "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.251.tgz";
-      hash = "sha256-CI6tK3vaQ27piP2BZvxfg2bh9EJdEQ9Mfa8MnhR1kpE=";
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.258.tgz";
+      hash = "sha256-T4DKV3hx5ViKJeLm67/pKCpvtqCTWDVt9Cu8NtvYVfQ=";
     };
     dontStrip = true;
     dontFixup = true;
