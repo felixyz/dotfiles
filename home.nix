@@ -25,10 +25,17 @@
         $out/lib/node_modules/opencode-claude-auth/
     '';
   };
+  # Delete pkgs/devenv.nix and this override
+  # once the nixpkgs-latest pin ships devenv 2.3 with devenv-proxy.
+  # See decisions/0013.
+  devenv-latest = nixpkgs-latest-base.callPackage ./pkgs/devenv.nix {
+    devenv = devenv-latest;
+  };
   nixpkgs-latest =
     nixpkgs-latest-base
     // {
       opencode-claude-auth = opencode-claude-auth-latest;
+      devenv = devenv-latest;
     };
   alacritty_colors = fromTOML (builtins.readFile ./melange_dark.toml);
   # Since 2.1.113-ish, @anthropic-ai/claude-code is a thin wrapper whose
