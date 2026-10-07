@@ -42,13 +42,12 @@ PROJECT_DIR="$(realpath "$(pwd)")"
 # locations. Override with BWRAP_ALLOW_ANY_DIR=1 for one-off experiments.
 if [ "${BWRAP_ALLOW_ANY_DIR:-0}" != "1" ]; then
   case "$PROJECT_DIR" in
-    "$HOME"/code|"$HOME"/code/*|\
     "$HOME"/dotfiles|"$HOME"/dotfiles/*|\
     /code|/code/*)
       ;;
     *)
       echo "Error: refusing to sandbox outside project roots: $PROJECT_DIR" >&2
-      echo "       allowed: ~/code, ~/dotfiles, /code" >&2
+      echo "       allowed: ~/dotfiles, /code" >&2
       echo "       override with BWRAP_ALLOW_ANY_DIR=1" >&2
       exit 1
       ;;
