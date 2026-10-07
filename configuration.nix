@@ -303,6 +303,12 @@
     # waybar
   ];
 
+  programs._1password.enable = true; # Installs the op binary
+  programs._1password-gui = {
+    enable = true;
+    polkitPolicyOwners = ["felix"];
+  };
+
   programs.fish.enable = true;
 
   virtualisation.podman = {
