@@ -264,7 +264,6 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    alacritty
     bubblewrap # Low-level unprivileged sandboxing (for sandboxing)
 
     gnomeExtensions.appindicator
