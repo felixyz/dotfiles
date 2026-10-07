@@ -289,6 +289,7 @@ in {
   home.shellAliases = {
     bux = "bundle exec";
     cat = "bat";
+    clip = "xclip -sel clip";
     gplease = "git push --no-verify --force-with-lease";
     grr = "cd (git rev-parse --show-toplevel)";
     k = "kubectl";
