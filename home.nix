@@ -7,7 +7,7 @@
   # than the system channel provides. Update the sha256 to bump.
   nixpkgs-latest-base = import (fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/nixpkgs-unstable.tar.gz";
-    sha256 = "06sil8mb0psrx1x49yfrxxr7sd6fqjz77amyx7bhr7rp3216gpyh";
+    sha256 = "05hh42z0glkdrl11fqch3n4733rfnmb8c7lji2q6dfqgbwdh2vna";
   }) {config.allowUnfree = true;};
   # Override nixpkgs (stuck at 0.7.3) — older versions still trigger the
   # "third-party app" billing notice. Fetch the prebuilt npm tarball to
@@ -50,10 +50,10 @@
   # /lib64/ld-linux-x86-64.so.2 via bwrap instead of touching the ELF.
   claude-code-bin = pkgs.stdenv.mkDerivation {
     pname = "claude-code-bin";
-    version = "2.1.258";
+    version = "2.1.282";
     src = pkgs.fetchzip {
-      url = "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.258.tgz";
-      hash = "sha256-T4DKV3hx5ViKJeLm67/pKCpvtqCTWDVt9Cu8NtvYVfQ=";
+      url = "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-x64/-/claude-code-linux-x64-2.1.282.tgz";
+      hash = "sha256-UtwAAE9LRAAI6tw+osXuDVx4iaWS8zEBrTIquUXT4Co=";
     };
     dontStrip = true;
     dontFixup = true;
