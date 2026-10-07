@@ -1,5 +1,7 @@
 # 0013. Vendor the devenv package until nixpkgs ships 2.3
 
+Status: retired 2026-09-25. The `nixpkgs-latest` pin reached devenv 2.3.1, whose recipe builds `devenv-proxy`, and the override was removed.
+
 ## Context
 
 devenv 2.3 (2026-09-07) adds the localhost process proxy, which honey_ops enables via `process.proxy.enable`. The `nixpkgs-latest` pin ships 2.2.2. The upstream bump, NixOS/nixpkgs#560896, is open but unmerged, and even that recipe builds only the `devenv` and `devenv-run-tests` crates. `devenv up` then fails with "devenv-proxy is missing from the devenv installation" whenever the proxy is enabled, because the CLI looks for `devenv-proxy` next to its own binary.

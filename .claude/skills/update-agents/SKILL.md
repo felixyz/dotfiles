@@ -36,11 +36,6 @@ If already on the latest version, say so and skip the edit.
 opencode comes from the shared `nixpkgs-latest` pin, not a direct version. Bumping it
 moves the whole pin (also `devenv`, `signal-desktop` — intended).
 
-Note: `devenv` is overridden with a vendored `pkgs/devenv.nix` (decisions/0013) because
-the pin lagged. After bumping the pin, check `nixpkgs-latest-base.devenv.version` and
-whether its recipe builds `devenv-proxy`. If both hold (>= 2.3 and the proxy ships),
-delete `pkgs/devenv.nix` and the `devenv-latest` override in `home.nix`.
-
 1. Latest nixpkgs-unstable commit + tarball hash (base32, `--unpack`):
    ```sh
    rev=$(curl -s https://api.github.com/repos/NixOS/nixpkgs/commits/nixpkgs-unstable \
