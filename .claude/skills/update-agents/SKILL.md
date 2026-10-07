@@ -75,12 +75,13 @@ pure i18n / desktop-polish noise.
   ```sh
   curl -sL "https://api.github.com/repositories/975734319/releases?per_page=80" \
     | python3 -c '
-  import json,sys
+  import json,sys,re
   rels=json.load(sys.stdin)
   key=lambda t: tuple(int(x) for x in t.lstrip("v").split("."))
   lo,hi=key("<old>"),key("<new>")   # old (exclusive) .. new (inclusive)
   out=[(key(r["tag_name"]),r["tag_name"],(r.get("body") or "").strip())
-       for r in rels if lo<key(r["tag_name"])<=hi]
+       for r in rels if re.fullmatch(r"v?\d+\.\d+\.\d+", r["tag_name"])   # the release list also holds tags like pr-38252-videos
+       and lo<key(r["tag_name"])<=hi]
   for k,t,b in sorted(out,reverse=True):
       print("### "+t); print(b[:800]); print()
   '
