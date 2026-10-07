@@ -5,7 +5,7 @@
 * Subject in sentence case, no trailing period, at most 50 characters, no `area:` prefix
 * A blank line, then `  * ` bullets wrapped near 72 columns with 4-space continuation, and `    - ` for nested points with 6-space continuation
 * No period at the end of a bullet
-* A one-liner is right when there is nothing non-obvious to say
+* A one-liner is right when there is nothing non-obvious to say. The majority of commits have 0-1 bullet. Somewhat complex or very important commits have 2-3, with 0-2 sub-bullets each. Only very complex and non-obvious commits need more than that.
 
 ### Substance
 
