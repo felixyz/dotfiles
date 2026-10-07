@@ -20,6 +20,15 @@ if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
+# A raw bridge to the devenv proxy would skip the hostname check in squid.
+DEVENV_PROXY_ADDR="${DEVENV_PROXY_LISTEN:-127.0.0.1:80}"
+case "$PORT" in
+  80 | 443 | "${DEVENV_PROXY_ADDR##*:}")
+    echo "Error: port $PORT is the devenv proxy, add the .localhost hostname with bwrap-allow-host instead" >&2
+    exit 1
+    ;;
+esac
+
 # Append to persistent .sandbox/allowed-ports if not already present
 TARGET=".sandbox/allowed-ports"
 if ! grep -qxF "$PORT" "$TARGET" 2>/dev/null; then

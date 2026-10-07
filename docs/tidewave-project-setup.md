@@ -308,8 +308,12 @@ To remove Tidewave from a project:
   apply gzip that MCP clients mishandle. Verify with the `curl` in
   step 3 and inspect response headers for `transfer-encoding`. If seen,
   disable compression for `/tidewave/*` in the dev server.
-- Inside a bwrap sandbox (`jean-claude`/`jean-luc`): port 4000 is not
-  auto-bridged. Run `bwrap-allow-port 4000` in a host shell before
-  starting the sandboxed agent. Similarly for any custom `$PORT`.
+- Inside a bwrap sandbox (`jean-claude`/`jean-luc`): the app port is not
+  auto-bridged. With devenv's process proxy (`proxy.hostname`), point
+  the MCP URL at `http://<hostname>/tidewave/mcp` and run
+  `bwrap-allow-host <hostname>` in a host shell. The sandbox then also
+  bridges whatever port the proxy routes that hostname to, which is the
+  address Tidewave Web gives its agents, see decisions/0015. Without the
+  proxy, run `bwrap-allow-port $PORT` instead.
   Tidewave-launched sessions bridge `:9832` (the tidewave-ide MCP)
-  automatically; the app port still needs the allowlist entry.
+  automatically; the app still needs one of the two allowlist entries.

@@ -8,6 +8,7 @@
 # so the change takes effect immediately and persists across restarts.
 #
 # Prefix with . to include all subdomains (e.g. .example.com)
+# A .localhost name must be listed exactly, see bwrap-sandbox.
 
 set -euo pipefail
 
@@ -28,6 +29,12 @@ if [ $# -eq 0 ]; then
 fi
 
 DOMAIN="$1"
+
+# One devenv proxy serves the dev servers of every project, see bwrap-sandbox.
+if [[ "${DOMAIN,,}" =~ ^(localhost|[.*](.*\.)?localhost)$ ]]; then
+  echo "Error: $DOMAIN is not a single .localhost hostname, add each hostname exactly" >&2
+  exit 1
+fi
 
 if [ "$GLOBAL" = true ]; then
   TARGET="$GLOBAL_ALLOWLIST"
@@ -59,6 +66,10 @@ for snapshot in $SNAPSHOT_GLOB; do
   [ -f "$snapshot" ] || continue
   if ! grep -qxF "$DOMAIN" "$snapshot" 2>/dev/null; then
     echo "$DOMAIN" >> "$snapshot"
+    # Running sandboxes have this file bind-mounted at /etc/hosts.
+    if [[ "${DOMAIN,,}" == *.localhost ]]; then
+      echo "127.0.0.1 $DOMAIN" >> "$(dirname "$snapshot")/hosts"
+    fi
   fi
   UPDATED=true
 done

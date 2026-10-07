@@ -13,6 +13,9 @@
 #   Global:      ~/.config/bwrap-sandbox/allowed-hosts.txt
 #   Per-project: ./.sandbox/allowed-hosts
 # Add a host on the fly from another terminal: bwrap-allow-host <domain>
+#
+# A devenv proxy hostname listed exactly in allowed-hosts is reachable inside at http://<name>/,
+# whichever port devenv allocated.
 
 set -euo pipefail
 
@@ -34,6 +37,11 @@ if [ -z "${BWRAP_PERSONA:-}" ]; then
       exit 1
       ;;
   esac
+fi
+
+if ! command -v jq >/dev/null; then
+  echo "Error: jq is not on PATH, it reads the devenv proxy's routes" >&2
+  exit 1
 fi
 
 PROJECT_DIR="$(realpath "$(pwd)")"
@@ -84,6 +92,14 @@ pick_free_port() {
 }
 SQUID_PORT=$(pick_free_port)
 INNER_PROXY_PORT=$SQUID_PORT
+DEVENV_ACCEL_PORT=$(pick_free_port)
+while [ "$DEVENV_ACCEL_PORT" = "$SQUID_PORT" ]; do
+  DEVENV_ACCEL_PORT=$(pick_free_port)
+done
+
+DEVENV_PROXY_ADDR="${DEVENV_PROXY_LISTEN:-127.0.0.1:80}"
+DEVENV_PROXY_HOST="${DEVENV_PROXY_ADDR%:*}"
+DEVENV_PROXY_PORT="${DEVENV_PROXY_ADDR##*:}"
 
 cleanup() {
   # Stop containers started via bwrap-podman during this session
@@ -94,6 +110,8 @@ cleanup() {
   for pid in "${PIDS[@]}"; do
     wait "$pid" 2>/dev/null || true
   done
+  # The devenv route bridges and those started by bwrap-allow-port are not in PIDS.
+  pkill -f "socat.*$SANDBOX_DIR/" 2>/dev/null || true
   rm -rf "$SANDBOX_DIR"
 }
 trap cleanup EXIT
@@ -148,10 +166,26 @@ fi
 # Strip comments and blank lines
 sed -i '/^[[:space:]]*#/d; /^[[:space:]]*$/d' "$SQUID_ALLOWLIST"
 sort -u -o "$SQUID_ALLOWLIST" "$SQUID_ALLOWLIST"
+# One devenv proxy serves the dev servers of every project.
+# Example: ".honeyops.localhost" would also admit "livebook.honeyops.localhost",
+# a server of a different project.
+LOCALHOST_WILDCARD='^(localhost|[.*](.*\.)?localhost)$'
+if grep -Eiq "$LOCALHOST_WILDCARD" "$SQUID_ALLOWLIST"; then
+  echo "Warning: ignoring allowlist entries that are not a single .localhost hostname:" >&2
+  grep -Ei "$LOCALHOST_WILDCARD" "$SQUID_ALLOWLIST" | sed 's/^/  /' >&2
+  sed -i -E "/$LOCALHOST_WILDCARD/Id" "$SQUID_ALLOWLIST"
+fi
+
+# Not every resolver maps .localhost names to loopback on its own.
+SANDBOX_HOSTS="$SANDBOX_DIR/hosts"
+cat /etc/hosts > "$SANDBOX_HOSTS"
+grep -Ei '\.localhost$' "$SQUID_ALLOWLIST" | sed 's/^/127.0.0.1 /' >> "$SANDBOX_HOSTS" || true
 
 cat > "$SANDBOX_DIR/squid.conf" << EOF
 # Minimal forward proxy for domain filtering
 acl allowed_hosts dstdomain "$SQUID_ALLOWLIST"
+acl localhost_names dstdom_regex -i (^|\.)localhost\$
+acl devenv_port myportname devenv
 acl SSL_ports port 443
 acl Safe_ports port 80
 acl Safe_ports port 443
@@ -159,10 +193,19 @@ acl CONNECT method CONNECT
 
 http_access deny !Safe_ports
 http_access deny CONNECT !SSL_ports
+http_access allow devenv_port allowed_hosts localhost_names
+http_access deny devenv_port
+http_access deny localhost_names
 http_access allow allowed_hosts
 http_access deny all
 
 http_port $SQUID_PORT
+# Sandbox port 80 arrives here.
+http_port 127.0.0.1:$DEVENV_ACCEL_PORT accel vhost name=devenv
+cache_peer $DEVENV_PROXY_HOST parent $DEVENV_PROXY_PORT 0 no-query originserver no-digest name=devenv_proxy
+cache_peer_access devenv_proxy allow devenv_port
+cache_peer_access devenv_proxy deny all
+never_direct allow devenv_port
 
 access_log stdio:$SANDBOX_DIR/access.log
 cache_log $SANDBOX_DIR/cache.log
@@ -213,6 +256,10 @@ if [ "$SOCKET_READY" != true ]; then
   exit 1
 fi
 
+DEVENV_SOCKET_PATH="$SANDBOX_DIR/devenv-proxy.sock"
+socat "UNIX-LISTEN:${DEVENV_SOCKET_PATH},fork" "TCP:127.0.0.1:${DEVENV_ACCEL_PORT}" 2>/dev/null &
+PIDS+=($!)
+
 # --- Port bridging ---
 # Bridge host localhost ports into the sandbox. Sources, merged and deduped:
 #   1. BWRAP_EXTRA_PORTS (space/comma separated) — set by launcher wrappers
@@ -237,10 +284,64 @@ if [ -f "$SANDBOX_PORTS_FILE" ]; then
   done < "$SANDBOX_PORTS_FILE"
 fi
 for port in $(printf '%s\n' ${BRIDGE_PORTS[@]+"${BRIDGE_PORTS[@]}"} | sort -un); do
+  # A raw bridge to the devenv proxy would skip the hostname check in squid.
+  case "$port" in
+    80 | 443 | "$DEVENV_PROXY_PORT")
+      echo "Warning: not bridging port $port, list the .localhost hostname in allowed-hosts instead" >&2
+      continue
+      ;;
+  esac
   sock="$SANDBOX_DIR/port-$port.sock"
   socat "UNIX-LISTEN:${sock},fork" "TCP:127.0.0.1:${port}" 2>/dev/null &
   PIDS+=($!)
 done
+
+# Tidewave Web points its agents at the dev server's own port, not its hostname.
+# The port behind each allowed .localhost name is bridged,
+# and the bridge follows the route when devenv allocates a different port.
+DEVENV_CONTROL_SOCKET="${DEVENV_PROXY_SOCKET:-${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/devenv/proxy.sock}"
+devenv_route_ports() {
+  [ -S "$DEVENV_CONTROL_SOCKET" ] || return 0
+  printf '{"command":"list"}\n' |
+    socat -t 2 - "UNIX-CONNECT:${DEVENV_CONTROL_SOCKET}" 2>/dev/null |
+    jq -r --rawfile allowed "$SQUID_ALLOWLIST" '
+      ($allowed | ascii_downcase | split("\n")) as $names
+      | .routes[]?
+      | select((.hostname | ascii_downcase) as $h | ($h | endswith(".localhost")) and ($names | index($h)))
+      | .upstream
+      | capture("^(127\\.0\\.0\\.1|localhost):(?<port>[0-9]+)$").port' 2>/dev/null |
+    sort -u
+}
+sync_devenv_bridges() {
+  local wanted port pidfile sock
+  wanted=$(devenv_route_ports || true)
+  for pidfile in "$SANDBOX_DIR"/devenv-bridge-*.pid; do
+    [ -f "$pidfile" ] || continue
+    port="${pidfile##*/devenv-bridge-}"
+    port="${port%.pid}"
+    if ! grep -qx "$port" <<< "$wanted"; then
+      kill "$(cat "$pidfile")" 2>/dev/null || true
+      rm -f "$pidfile" "$SANDBOX_DIR/port-$port.sock"
+    fi
+  done
+  for port in $wanted; do
+    case "$port" in 80 | 443 | "$DEVENV_PROXY_PORT") continue ;; esac
+    sock="$SANDBOX_DIR/port-$port.sock"
+    [ -S "$sock" ] && continue
+    socat "UNIX-LISTEN:${sock},fork" "TCP:127.0.0.1:${port}" 2>/dev/null &
+    echo $! > "$SANDBOX_DIR/devenv-bridge-$port.pid"
+    for _ in $(seq 1 10); do
+      [ -S "$sock" ] && break
+      sleep 0.1
+    done
+  done
+}
+sync_devenv_bridges
+(while true; do
+  sleep 2
+  sync_devenv_bridges
+done) &
+PIDS+=($!)
 
 # --- Reverse port bridging ---
 # BWRAP_EXPOSE_PORTS lists sandbox ports the host reaches at the same
@@ -276,18 +377,20 @@ cat > "$INNER_SCRIPT" << 'INNEREOF'
 #!/usr/bin/env bash
 # Start inner socat: localhost proxy port -> unix socket
 socat "TCP-LISTEN:${BWRAP_PROXY_PORT},bind=127.0.0.1,fork,reuseaddr" "UNIX-CONNECT:${BWRAP_SOCKET_PATH}" 2>/dev/null &
+socat "TCP-LISTEN:80,bind=127.0.0.1,fork,reuseaddr" "UNIX-CONNECT:${BWRAP_DEVENV_SOCKET_PATH}" 2>/dev/null &
 
 # Wait for inner socat to be listening
 INNER_READY=false
 for _ in $(seq 1 20); do
-  if ss -tlnp 2>/dev/null | grep -q ":${BWRAP_PROXY_PORT}"; then
+  listening=$(ss -tln 2>/dev/null)
+  if grep -q ":${BWRAP_PROXY_PORT} " <<< "$listening" && grep -q ":80 " <<< "$listening"; then
     INNER_READY=true
     break
   fi
   sleep 0.1
 done
 if [ "$INNER_READY" != true ]; then
-  echo "Error: inner socat failed to start on port ${BWRAP_PROXY_PORT}" >&2
+  echo "Error: inner socat failed to start on port ${BWRAP_PROXY_PORT} or 80" >&2
   exit 1
 fi
 
@@ -429,15 +532,22 @@ if [ "$BWRAP_PERSONA" = "juggler" ]; then
   done
 fi
 
-# Run bwrap (not exec, so cleanup trap fires on exit)
-bwrap \
+# Run the sandbox (not exec, so cleanup trap fires on exit)
+# The network namespace is created here rather than by bwrap,
+# so that ports from 80 up can be bound inside without any capability.
+# bwrap refuses to start while it holds capabilities, so setpriv drops them first.
+unshare --user --map-current-user --net --keep-caps -- bash -c '
+  ip link set lo up &&
+  echo 80 > /proc/sys/net/ipv4/ip_unprivileged_port_start &&
+  exec setpriv --inh-caps=-all --ambient-caps=-all -- "$@"
+' bwrap-netns bwrap \
   --ro-bind /nix /nix \
   --ro-bind /run/current-system /run/current-system \
   --ro-bind /run/wrappers /run/wrappers \
   --ro-bind /bin /bin \
   --ro-bind /usr /usr \
   --ro-bind /etc/resolv.conf /etc/resolv.conf \
-  --ro-bind /etc/hosts /etc/hosts \
+  --ro-bind "$SANDBOX_HOSTS" /etc/hosts \
   --ro-bind /etc/ssl /etc/ssl \
   --ro-bind /etc/static /etc/static \
   --ro-bind /etc/passwd /etc/passwd \
@@ -463,7 +573,6 @@ bwrap \
   --tmpfs /tmp \
   --proc /proc \
   --dev /dev \
-  --unshare-net \
   --unshare-pid \
   --unshare-ipc \
   --die-with-parent \
@@ -475,8 +584,8 @@ bwrap \
   --setenv HTTPS_PROXY "http://127.0.0.1:$INNER_PROXY_PORT" \
   --setenv http_proxy "http://127.0.0.1:$INNER_PROXY_PORT" \
   --setenv https_proxy "http://127.0.0.1:$INNER_PROXY_PORT" \
-  --setenv no_proxy "localhost,127.0.0.1,::1" \
-  --setenv NO_PROXY "localhost,127.0.0.1,::1" \
+  --setenv no_proxy "localhost,.localhost,127.0.0.1,::1" \
+  --setenv NO_PROXY "localhost,.localhost,127.0.0.1,::1" \
   --setenv XDG_RUNTIME_DIR "/run/user/$(id -u)" \
   --setenv MIX_HOME "$PROJECT_DIR/.toolchain/mix" \
   --setenv HEX_HOME "$PROJECT_DIR/.toolchain/hex" \
@@ -486,6 +595,7 @@ bwrap \
   --setenv BWRAP_SANDBOX_DIR "$SANDBOX_DIR" \
   --setenv BWRAP_PROXY_PORT "$INNER_PROXY_PORT" \
   --setenv BWRAP_SOCKET_PATH "$SOCKET_PATH" \
+  --setenv BWRAP_DEVENV_SOCKET_PATH "$DEVENV_SOCKET_PATH" \
   --setenv BWRAP_EXPOSE_PORTS "${EXPOSE_PORTS[*]:-}" \
   --setenv OPENCODE_DISABLE_LSP_DOWNLOAD "true" \
   --chdir "$PROJECT_DIR" \
