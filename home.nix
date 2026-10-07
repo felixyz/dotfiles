@@ -25,6 +25,7 @@
         $out/lib/node_modules/opencode-claude-auth/
     '';
   };
+  juggler = nixpkgs-latest-base.callPackage ./pkgs/juggler.nix {};
   nixpkgs-latest =
     nixpkgs-latest-base
     // {
@@ -146,6 +147,14 @@ in {
 
   xdg = {
     configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/nvim";
+    # Juggler drives opencode over ACP. `opencode acp` has no --agent flag.
+    # Tool permissions go through juggler's own approver. See decisions/0014.
+    configFile."juggler/acp.json".text = builtins.toJSON {
+      acpAgents.opencode = {
+        command = "opencode";
+        args = ["acp"];
+      };
+    };
   };
 
   nixpkgs.config = {
@@ -186,6 +195,7 @@ in {
     inconsolata
     jujutsu
     jq
+    juggler
     lazygit
     lsof
     mergiraf # syntax-aware git merge driver
@@ -289,6 +299,8 @@ in {
     dv = "devenv";
     jean-claude = "BWRAP_PERSONA=claude bwrap-sandbox $(command -v claude) --dangerously-skip-permissions";
     jean-luc = "BWRAP_PERSONA=opencode bwrap-sandbox $(command -v opencode) --agent yolo";
+    # The web UI at localhost:3939 is bridged out of the sandbox. See decisions/0014.
+    jean-juggler = "BWRAP_PERSONA=juggler BWRAP_EXPOSE_PORTS=3939 bwrap-sandbox $(command -v juggler)";
     sbd = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote";
     sb-nuke = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote rm -af";
   };

@@ -5,9 +5,9 @@
 #
 # Usage: bwrap-sandbox <command> [args...]
 #
-# Two personas with different ~/.claude scoping (see mount strategy below):
-# "claude" and "opencode", auto-detected from the command basename or set
-# explicitly via BWRAP_PERSONA.
+# Three personas with different home-dir scoping, see the mount strategy below.
+# "claude", "opencode", and "juggler", auto-detected from the command basename
+# or set explicitly via BWRAP_PERSONA.
 #
 # Domain allowlists (merged at startup into an immutable snapshot):
 #   Global:      ~/.config/bwrap-sandbox/allowed-hosts.txt
@@ -27,9 +27,10 @@ if [ -z "${BWRAP_PERSONA:-}" ]; then
   case "$(basename -- "$1")" in
     claude) BWRAP_PERSONA=claude ;;
     opencode) BWRAP_PERSONA=opencode ;;
+    juggler) BWRAP_PERSONA=juggler ;;
     *)
       echo "Error: cannot auto-detect persona from command '$(basename -- "$1")'" >&2
-      echo "       set BWRAP_PERSONA=claude or BWRAP_PERSONA=opencode explicitly" >&2
+      echo "       set BWRAP_PERSONA=claude, opencode, or juggler explicitly" >&2
       exit 1
       ;;
   esac
@@ -139,6 +140,7 @@ platform.claude.com
 .registry-1.docker.io
 .production.cloudflare.docker.com
 .tidewave.ai
+juggler.studio
 BUILTIN
 cat "$GLOBAL_ALLOWLIST" >> "$SQUID_ALLOWLIST"
 if [ -f "$PROJECT_ALLOWLIST" ]; then
@@ -241,6 +243,30 @@ for port in $(printf '%s\n' ${BRIDGE_PORTS[@]+"${BRIDGE_PORTS[@]}"} | sort -un);
   PIDS+=($!)
 done
 
+# --- Reverse port bridging ---
+# BWRAP_EXPOSE_PORTS lists sandbox ports the host reaches at the same
+# localhost port, the opposite direction of the bridges above.
+# Each bridge runs from host localhost:PORT through a UNIX socket in EXPOSE_DIR
+# to sandbox localhost:PORT.
+# The inner socat creates the socket, so EXPOSE_DIR is bind-mounted writable
+# over the read-only SANDBOX_DIR.
+EXPOSE_DIR="$SANDBOX_DIR/expose"
+mkdir -p "$EXPOSE_DIR"
+EXPOSE_PORTS=()
+expose_ports="${BWRAP_EXPOSE_PORTS:-}"
+for port in ${expose_ports//,/ }; do
+  [[ "$port" =~ ^[0-9]+$ ]] || continue
+  if ss -tln 2>/dev/null | grep -q ":$port "; then
+    echo "Error: cannot expose sandbox port $port, host port $port is already in use" >&2
+    exit 1
+  fi
+  EXPOSE_PORTS+=("$port")
+done
+for port in ${EXPOSE_PORTS[@]+"${EXPOSE_PORTS[@]}"}; do
+  socat "TCP-LISTEN:${port},bind=127.0.0.1,fork,reuseaddr" "UNIX-CONNECT:${EXPOSE_DIR}/port-${port}.sock" 2>/dev/null &
+  PIDS+=($!)
+done
+
 # --- Launch sandbox ---
 # The inner socat runs inside the sandbox, bridging localhost:INNER_PROXY_PORT
 # to the unix socket. We use a wrapper script so we can background socat
@@ -281,6 +307,11 @@ fi
   sleep 2
 done) &
 
+for port in ${BWRAP_EXPOSE_PORTS//,/ }; do
+  [[ "$port" =~ ^[0-9]+$ ]] || continue
+  socat "UNIX-LISTEN:${BWRAP_SANDBOX_DIR}/expose/port-${port}.sock,fork" "TCP:127.0.0.1:${port}" 2>/dev/null &
+done
+
 # Run the actual command
 exec "$@"
 INNEREOF
@@ -290,7 +321,7 @@ chmod +x "$INNER_SCRIPT"
 CLAUDE_DIR_ARGS=()
 CLAUDE_JSON_ARGS=()
 case "$BWRAP_PERSONA" in
-  claude)
+  claude | juggler)
     # Parent ro-bind caps top-level creation; subdirs punched through
     # writable except plugins/ (code + manifests), of which only
     # plugins/data/ is re-punched writable below.
@@ -340,7 +371,7 @@ case "$BWRAP_PERSONA" in
     fi
     ;;
   *)
-    echo "Error: unknown BWRAP_PERSONA=$BWRAP_PERSONA (expected: claude|opencode)" >&2
+    echo "Error: unknown BWRAP_PERSONA=$BWRAP_PERSONA (expected: claude|opencode|juggler)" >&2
     exit 1
     ;;
 esac
@@ -349,7 +380,7 @@ esac
 # ro-bind parents cap top-level creation; specific children get writable
 # binds only where opencode genuinely needs runtime writes.
 OPENCODE_DIR_ARGS=()
-if [ "$BWRAP_PERSONA" = "opencode" ]; then
+if [ "$BWRAP_PERSONA" = "opencode" ] || [ "$BWRAP_PERSONA" = "juggler" ]; then
   # Contents are Nix-managed symlinks; opencode never writes here.
   if [ -d "$HOME/.config/opencode" ]; then
     OPENCODE_DIR_ARGS+=(--ro-bind "$HOME/.config/opencode" "$HOME/.config/opencode")
@@ -387,6 +418,18 @@ if [ "$BWRAP_PERSONA" = "opencode" ]; then
   fi
 fi
 
+# --- juggler mount strategy ---
+# The juggler persona is the claude and opencode mounts above combined,
+# since juggler spawns both agents inside the sandbox, plus its own
+# config, cache, and log dirs. See decisions/0014.
+JUGGLER_DIR_ARGS=()
+if [ "$BWRAP_PERSONA" = "juggler" ]; then
+  for dir in "$HOME/.config/juggler" "$HOME/.cache/juggler" "$HOME/.local/state/juggler"; do
+    mkdir -p "$dir"
+    JUGGLER_DIR_ARGS+=(--bind "$dir" "$dir")
+  done
+fi
+
 # Run bwrap (not exec, so cleanup trap fires on exit)
 bwrap \
   --ro-bind /nix /nix \
@@ -409,8 +452,10 @@ bwrap \
   ${CLAUDE_DIR_ARGS[@]+"${CLAUDE_DIR_ARGS[@]}"} \
   ${CLAUDE_JSON_ARGS[@]+"${CLAUDE_JSON_ARGS[@]}"} \
   ${OPENCODE_DIR_ARGS[@]+"${OPENCODE_DIR_ARGS[@]}"} \
+  ${JUGGLER_DIR_ARGS[@]+"${JUGGLER_DIR_ARGS[@]}"} \
   --tmpfs "$PROJECT_DIR/.sandbox" \
   --ro-bind "$SANDBOX_DIR" "$SANDBOX_DIR" \
+  --bind "$EXPOSE_DIR" "$EXPOSE_DIR" \
   --bind /run/bwrap-podman /run/bwrap-podman \
   --tmpfs /run/user \
   --dir "/run/user/$(id -u)" \
@@ -442,6 +487,7 @@ bwrap \
   --setenv BWRAP_SANDBOX_DIR "$SANDBOX_DIR" \
   --setenv BWRAP_PROXY_PORT "$INNER_PROXY_PORT" \
   --setenv BWRAP_SOCKET_PATH "$SOCKET_PATH" \
+  --setenv BWRAP_EXPOSE_PORTS "${EXPOSE_PORTS[*]:-}" \
   --setenv OPENCODE_DISABLE_LSP_DOWNLOAD "true" \
   --chdir "$PROJECT_DIR" \
   -- "$INNER_SCRIPT" "$@"
