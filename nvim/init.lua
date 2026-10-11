@@ -187,8 +187,8 @@ vim.api.nvim_set_keymap('n', ']q', ':cnext<CR>', { noremap = true, silent = true
 vim.api.nvim_set_keymap('v', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<C-y>', ':w !xclip -sel c <CR><CR>', { noremap = true })
 
-vim.lsp.config('elixirls', {
-  cmd = { 'elixir-ls' },
+vim.lsp.config('expert', {
+  cmd = { 'expert', '--stdio' },
   filetypes = { 'elixir', 'eelixir', 'heex', 'surface' },
   root_markers = { 'mix.exs', '.git' },
 })
@@ -204,7 +204,7 @@ vim.lsp.config('lua_ls', {
 })
 vim.lsp.config('nixd', {})
 
-vim.lsp.enable({ 'elixirls', 'ruby_lsp', 'ts_ls', 'eslint', 'lua_ls', 'nixd' })
+vim.lsp.enable({ 'expert', 'ruby_lsp', 'ts_ls', 'eslint', 'lua_ls', 'nixd' })
 
 --vim.lsp.enable('postgres_lsp')
 

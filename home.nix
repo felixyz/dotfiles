@@ -223,7 +223,7 @@ in {
 
     # LSPs / formatters
     alejandra # "The Uncompromising Nix Code Formatter"
-    elixir-ls
+    nixpkgs-latest.beamPackages.expert # Elixir LSP
     lua-language-server
     nixd # Nix language server, based on nix libraries
     nodePackages.typescript-language-server
