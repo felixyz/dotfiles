@@ -24,6 +24,13 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
+# The stale-session sweep below cannot see the enclosing session's squid
+# from inside its PID namespace, so a nested run kills that session's socat bridges.
+if [ -n "${BWRAP_SANDBOX_DIR:-}" ]; then
+  echo "Error: already inside a bwrap sandbox ($BWRAP_SANDBOX_DIR)" >&2
+  exit 1
+fi
+
 # Fail-closed persona detection: unknown commands error out rather than
 # defaulting to the more-permissive "claude" scoping.
 if [ -z "${BWRAP_PERSONA:-}" ]; then
