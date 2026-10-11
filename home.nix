@@ -506,6 +506,18 @@ in {
     };
   };
 
+  # 1Password's "Start at login" setting writes this same file, so leave it off.
+  # The bare 1password in Exec resolves to the build the NixOS module installs,
+  # with polkitPolicyOwners applied. pkgs._1password-gui is a different build without them.
+  xdg.configFile."autostart/1password.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=1Password
+    Exec=1password --silent
+    Icon=1password
+    Terminal=false
+  '';
+
   dconf.settings = {
     "org/gnome/shell" = {
       enabled-extensions = [
