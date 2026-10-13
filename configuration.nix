@@ -80,6 +80,10 @@
     "zswap.compressor=zstd"
     "zswap.zpool=zsmalloc" # preferred allocator (vs z3fold/zbud)
     "zswap.max_pool_percent=20"
+    # Cap the ZFS cache at 6 GiB, and let it shrink as fast as the kernel asks.
+    # Without a cap, it can fill almost all RAM, and the kernel swaps out applications to make room.
+    "zfs.zfs_arc_max=6442450944"
+    "zfs.zfs_arc_shrinker_limit=0"
   ];
 
   boot.kernel.sysctl = {
@@ -88,20 +92,23 @@
     "vm.page-cluster" = 0; # NVMe + compressed: no readahead clustering
   };
 
-  # --- OOM setup
-  systemd.oomd.enable = true;
-  systemd.oomd.settings.OOM = {
-    DefaultMemoryPressureLimit = "60%";
-    DefaultMemoryPressureDurationSec = "30s";
-    DefaultSwapUsedLimit = "90%";
-  };
+  # Make the kernel kill a process rather than freeze when memory runs out.
+  # It does so once it can no longer keep the memory used in the last second.
+  systemd.tmpfiles.settings."10-mglru"."/sys/kernel/mm/lru_gen/min_ttl_ms".w.argument = "1000";
 
-  # Ensure user sessions are protected, kill leaf services first
-  systemd.user.extraConfig = ''
-    ManagedOOMMemoryPressure=kill
-    ManagedOOMSwap=kill
-  '';
-  # ---
+  systemd.oomd.enable = false;
+  services.earlyoom = {
+    enable = true;
+    freeMemThreshold = 5;
+    freeSwapThreshold = 50;
+    enableNotifications = true;
+    # earlyoom matches the process name, which Linux cuts to 15 characters,
+    # so "systemd-journal" is journald.
+    extraArgs = [
+      "--avoid"
+      "^(gnome-shell|Xwayland|gdm|systemd|systemd-journal|dbus-daemon|dbus-broker|pipewire|wireplumber|sshd)$"
+    ];
+  };
 
   # Dropbox
   systemd.user.services.dropbox = {
