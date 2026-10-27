@@ -336,6 +336,10 @@ in {
     attributes = [
       "* merge=mergiraf"
     ];
+    ignores = [
+      # bwrap-sandbox creates it in every devenv project, see decisions/0018.
+      "devenv.local.yaml"
+    ];
   };
 
   programs.difftastic = {

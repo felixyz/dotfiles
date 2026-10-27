@@ -83,12 +83,29 @@ PROJECT_ALLOWLIST="$PROJECT_DIR/.sandbox/allowed-hosts"
 # path components on this system.
 PROJECT_DIR_TAG="${PROJECT_DIR//\//=}"
 SANDBOX_DIR=$(mktemp -d --tmpdir="$HOME/.cache" "bwrap-sandbox.${PROJECT_DIR_TAG}.XXXXXX")
-# Sandbox gets its own .devenv/state (so postgres dir is absent and initdb runs),
-# but the host's venv is bind-mounted back in to avoid re-downloading packages.
-mkdir -p "$SANDBOX_DIR/devenv-state"
+# The sandbox gets its own .devenv, so Postgres runs initdb on an empty state dir.
+# It also keeps the host's eval cache intact, which holds a single entry that a sandbox's config would replace.
+# The host's venv is bind-mounted back in to avoid re-downloading packages.
+mkdir -p "$SANDBOX_DIR/devenv/state"
 BWRAP_DEVENV_VENV_ARGS=()
 if [ -d "$PROJECT_DIR/.devenv/state/venv" ]; then
   BWRAP_DEVENV_VENV_ARGS+=(--bind "$PROJECT_DIR/.devenv/state/venv" "$PROJECT_DIR/.devenv/state/venv")
+fi
+# The port behind an allowed .localhost name is bridged from the host, so it is taken inside the sandbox.
+# devenv with strict ports checks every process port before it starts any process,
+# and strict_ports false gives a process whose port is taken the next free one.
+# The host file is created as "{}" because bwrap needs a file to mount over.
+# It is never removed, since another sandbox of the same project may have it mounted.
+BWRAP_DEVENV_LOCAL_ARGS=()
+if [ -f "$PROJECT_DIR/devenv.yaml" ]; then
+  DEVENV_LOCAL="$PROJECT_DIR/devenv.local.yaml"
+  if [ ! -e "$DEVENV_LOCAL" ]; then
+    echo '{}' > "$DEVENV_LOCAL"
+    echo "Note: created $DEVENV_LOCAL" >&2
+  fi
+  grep -v '^strict_ports:' "$DEVENV_LOCAL" | grep -vx '{}' > "$SANDBOX_DIR/devenv.local.yaml" || true
+  echo 'strict_ports: false' >> "$SANDBOX_DIR/devenv.local.yaml"
+  BWRAP_DEVENV_LOCAL_ARGS+=(--ro-bind "$SANDBOX_DIR/devenv.local.yaml" "$DEVENV_LOCAL")
 fi
 PIDS=()
 
@@ -598,8 +615,9 @@ unshare --user --map-current-user --net --keep-caps -- bash -c '
   --symlink /nix/var/nix/profiles/per-user/"$USER"/home-manager-path "$HOME/.nix-profile" \
   --ro-bind "$HOME/.config/git" "$HOME/.config/git" \
   --bind "$PROJECT_DIR" "$PROJECT_DIR" \
-  --bind "$SANDBOX_DIR/devenv-state" "$PROJECT_DIR/.devenv/state" \
+  --bind "$SANDBOX_DIR/devenv" "$PROJECT_DIR/.devenv" \
   ${BWRAP_DEVENV_VENV_ARGS[@]+"${BWRAP_DEVENV_VENV_ARGS[@]}"} \
+  ${BWRAP_DEVENV_LOCAL_ARGS[@]+"${BWRAP_DEVENV_LOCAL_ARGS[@]}"} \
   ${CLAUDE_DIR_ARGS[@]+"${CLAUDE_DIR_ARGS[@]}"} \
   ${CLAUDE_JSON_ARGS[@]+"${CLAUDE_JSON_ARGS[@]}"} \
   ${OPENCODE_DIR_ARGS[@]+"${OPENCODE_DIR_ARGS[@]}"} \
