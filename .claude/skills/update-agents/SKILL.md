@@ -1,10 +1,10 @@
 ---
 name: update-agents
-description: Update claude-code, opencode, and tidewave-cli to their latest releases in the dotfiles home.nix, and print a brief changelog summary for each. Use when the user asks to update/upgrade/bump claude-code, opencode, and/or tidewave (the coding agents), e.g. "update claude and opencode", "bump tidewave", "bump the agents".
+description: Update claude-code, opencode, tidewave-cli, and openchamber (with its opencode2) to their latest releases in the dotfiles home.nix, and print a brief changelog summary for each. Use when the user asks to update/upgrade/bump claude-code, opencode, and/or tidewave (the coding agents) or openchamber, e.g. "update claude and opencode", "bump tidewave", "bump the agents".
 ---
 
 Update the coding agents pinned in `~/dotfiles/home.nix` (claude-code, opencode, and
-tidewave-cli), then print a short changelog summary for each.
+tidewave-cli) and in `~/dotfiles/pkgs/` (openchamber and opencode2), then print a short changelog summary for each.
 
 Do the work in this order. If the user names only some of them, do just those.
 
@@ -75,7 +75,49 @@ independent of the `:tidewave` hex package that Elixir projects depend on.
 
 If already on the latest version, say so and skip the edit.
 
-## 4. Print a brief changelog summary (always do this)
+## 4. openchamber and opencode2
+
+OpenChamber runs on OpenCode v2 (`@opencode/cli`), a release line separate from the
+nixpkgs `opencode` above. See `~/dotfiles/decisions/0016`. Both are pinned in `pkgs/`.
+
+1. Latest versions:
+   ```sh
+   curl -s https://registry.npmjs.org/@opencode/cli-linux-x64/latest | jq -r .version
+   curl -s https://registry.npmjs.org/@openchamber/web/latest | jq -r .version
+   ```
+2. **opencode2**: in `pkgs/opencode2.nix`, set `version =` and the `hash =` from
+   ```sh
+   nix store prefetch-file --json --unpack \
+     "https://registry.npmjs.org/@opencode/cli-linux-x64/-/cli-linux-x64-$V.tgz" | jq -r .hash
+   ```
+3. **openchamber**: check the new release's minimum OpenCode first
+   (`MINIMUM_OPENCODE_VERSION` in `server/lib/opencode/compatibility.js` of the tarball), and
+   bump opencode2 with it if needed. Then regenerate the lockfile from the published tarball:
+   ```sh
+   V=<version>; T=$(mktemp -d); cd "$T"
+   curl -fsSL "https://registry.npmjs.org/@openchamber/web/-/web-$V.tgz" | tar xz && cd package
+   jq 'del(.devDependencies)' package.json > p && mv p package.json
+   npm install --package-lock-only --ignore-scripts
+   cp package-lock.json ~/dotfiles/pkgs/openchamber/package-lock.json
+   ```
+   In `pkgs/openchamber/default.nix`, set `version =`, the `src` `hash =` (prefetch with
+   `--unpack` as in step 2), and `npmDepsHash = lib.fakeHash;`. Build to get the real
+   `npmDepsHash` from the "got:" line:
+   ```sh
+   S=<sha256 of nixpkgs-latest-base in home.nix>
+   nix-build --no-out-link -E "with import (fetchTarball {
+       url = \"https://github.com/NixOS/nixpkgs/archive/nixpkgs-unstable.tar.gz\"; sha256 = \"$S\"; }) {};
+     callPackage $HOME/dotfiles/pkgs/openchamber { opencode2 = callPackage $HOME/dotfiles/pkgs/opencode2.nix {}; }"
+   ```
+4. The changelog is `CHANGELOG.md` in the openchamber repo, newest first:
+   ```sh
+   curl -s https://raw.githubusercontent.com/openchamber/openchamber/main/CHANGELOG.md | head -120
+   ```
+
+Also check whether `opencode-claude-auth` has shipped v2 support (issues #245 and #290 in
+griffinmartin/opencode-claude-auth). If it has, decisions/0016 lists what to revisit.
+
+## 5. Print a brief changelog summary (always do this)
 
 After picking the new versions, print a **short summary — max ~10 brief points each**
 — of the most important changes between the old and new versions, for each updated
@@ -107,9 +149,9 @@ pure i18n / desktop-polish noise.
   curl -s https://raw.githubusercontent.com/tidewave-ai/tidewave_app/main/CHANGELOG.md | head -80
   ```
 
-## 5. Hand off (do NOT commit, do NOT switch)
+## 6. Hand off (do NOT commit, do NOT switch)
 
-- **Stage** the `home.nix` diff (`git add home.nix`) but **never run `git commit` or
+- **Stage** the `home.nix` and `pkgs/` diffs (`git add home.nix pkgs/`) but **never run `git commit` or
   `git push`** — ask the user to commit. (See the never-commit feedback in memory.)
 - Do **not** run `home-manager switch` — the user applies it themselves. Tell them the
   edits are staged and ready to switch + commit.

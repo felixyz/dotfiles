@@ -5,8 +5,8 @@
 #
 # Usage: bwrap-sandbox <command> [args...]
 #
-# Three personas with different home-dir scoping, see the mount strategy below.
-# "claude", "opencode", and "juggler", auto-detected from the command basename
+# Four personas with different home-dir scoping, see the mount strategy below.
+# "claude", "opencode", "juggler", and "openchamber", auto-detected from the command basename
 # or set explicitly via BWRAP_PERSONA.
 #
 # Domain allowlists (merged at startup into an immutable snapshot):
@@ -38,9 +38,10 @@ if [ -z "${BWRAP_PERSONA:-}" ]; then
     claude) BWRAP_PERSONA=claude ;;
     opencode) BWRAP_PERSONA=opencode ;;
     juggler) BWRAP_PERSONA=juggler ;;
+    openchamber) BWRAP_PERSONA=openchamber ;;
     *)
       echo "Error: cannot auto-detect persona from command '$(basename -- "$1")'" >&2
-      echo "       set BWRAP_PERSONA=claude, opencode, or juggler explicitly" >&2
+      echo "       set BWRAP_PERSONA=claude, opencode, juggler, or openchamber explicitly" >&2
       exit 1
       ;;
   esac
@@ -491,8 +492,13 @@ case "$BWRAP_PERSONA" in
       CLAUDE_DIR_ARGS+=(--ro-bind "$HOME/.claude/skills" "$HOME/.claude/skills")
     fi
     ;;
+  openchamber)
+    if [ -d "$HOME/.claude/skills" ]; then
+      CLAUDE_DIR_ARGS+=(--ro-bind "$HOME/.claude/skills" "$HOME/.claude/skills")
+    fi
+    ;;
   *)
-    echo "Error: unknown BWRAP_PERSONA=$BWRAP_PERSONA (expected: claude|opencode|juggler)" >&2
+    echo "Error: unknown BWRAP_PERSONA=$BWRAP_PERSONA (expected: claude|opencode|juggler|openchamber)" >&2
     exit 1
     ;;
 esac
@@ -551,6 +557,23 @@ if [ "$BWRAP_PERSONA" = "juggler" ]; then
   done
 fi
 
+# --- openchamber mount strategy ---
+# OpenChamber runs OpenCode v2, which gets its own config, data, state, and cache dirs
+# mounted at opencode's usual paths, so it never reads or migrates v1's sessions.
+# See decisions/0016.
+OPENCHAMBER_DIR_ARGS=()
+if [ "$BWRAP_PERSONA" = "openchamber" ]; then
+  for pair in \
+    ".config/openchamber-opencode:.config/opencode" \
+    ".local/share/openchamber-opencode:.local/share/opencode" \
+    ".local/state/openchamber-opencode:.local/state/opencode" \
+    ".cache/openchamber-opencode:.cache/opencode" \
+    ".config/openchamber:.config/openchamber"; do
+    mkdir -p "$HOME/${pair%%:*}"
+    OPENCHAMBER_DIR_ARGS+=(--bind "$HOME/${pair%%:*}" "$HOME/${pair##*:}")
+  done
+fi
+
 # Run the sandbox (not exec, so cleanup trap fires on exit)
 # The network namespace is created here rather than by bwrap,
 # so that ports from 80 up can be bound inside without any capability.
@@ -581,6 +604,7 @@ unshare --user --map-current-user --net --keep-caps -- bash -c '
   ${CLAUDE_JSON_ARGS[@]+"${CLAUDE_JSON_ARGS[@]}"} \
   ${OPENCODE_DIR_ARGS[@]+"${OPENCODE_DIR_ARGS[@]}"} \
   ${JUGGLER_DIR_ARGS[@]+"${JUGGLER_DIR_ARGS[@]}"} \
+  ${OPENCHAMBER_DIR_ARGS[@]+"${OPENCHAMBER_DIR_ARGS[@]}"} \
   --tmpfs "$PROJECT_DIR/.sandbox" \
   --ro-bind "$SANDBOX_DIR" "$SANDBOX_DIR" \
   --bind "$EXPOSE_DIR" "$EXPOSE_DIR" \

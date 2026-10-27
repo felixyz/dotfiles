@@ -26,6 +26,9 @@
     '';
   };
   juggler = nixpkgs-latest-base.callPackage ./pkgs/juggler.nix {};
+  openchamber = nixpkgs-latest-base.callPackage ./pkgs/openchamber {
+    opencode2 = nixpkgs-latest-base.callPackage ./pkgs/opencode2.nix {};
+  };
   nixpkgs-latest =
     nixpkgs-latest-base
     // {
@@ -205,6 +208,7 @@ in {
     ngrok
     nixpkgs-latest.opencode
     nixpkgs-latest.opencode-claude-auth
+    openchamber
     pgcli
     pgformatter
     procs
@@ -303,6 +307,8 @@ in {
     jean-luc = "BWRAP_PERSONA=opencode bwrap-sandbox $(command -v opencode) --agent yolo";
     # The web UI at localhost:3939 is bridged out of the sandbox. See decisions/0014.
     jean-juggler = "BWRAP_PERSONA=juggler BWRAP_EXPOSE_PORTS=3939 bwrap-sandbox $(command -v juggler)";
+    # The web UI at localhost:3940 is bridged out of the sandbox. See decisions/0016.
+    jean-chamber = "BWRAP_PERSONA=openchamber BWRAP_EXPOSE_PORTS=3940 bwrap-sandbox $(command -v openchamber) serve --foreground --port 3940";
     sbd = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote";
     sb-nuke = "env CONTAINER_HOST=unix:///run/bwrap-podman/podman.sock podman --remote rm -af";
   };
@@ -354,6 +360,8 @@ in {
   '';
   xdg.configFile."opencode/agents/yolo.md".source = ./opencode/yolo.md;
   xdg.configFile."opencode/tui.json".source = ./opencode/tui.json;
+  # The `openchamber` sandbox persona mounts this dir at ~/.config/opencode. See decisions/0016.
+  xdg.configFile."openchamber-opencode/opencode.json".source = ./opencode/config.json;
 
   # dirge → Tensorix (OpenAI-compatible) for GLM; same endpoint/key as opencode.
   xdg.configFile."dirge/config.json".source = ./dirge/config.json;
