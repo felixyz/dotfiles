@@ -337,6 +337,7 @@ in {
       "* merge=mergiraf"
     ];
     ignores = [
+      "**/.claude/settings.local.json"
       # bwrap-sandbox creates it in every devenv project, see decisions/0018.
       "devenv.local.yaml"
     ];
