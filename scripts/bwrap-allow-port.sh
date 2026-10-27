@@ -27,6 +27,10 @@ case "$PORT" in
     echo "Error: port $PORT is the devenv proxy, add the .localhost hostname with bwrap-allow-host instead" >&2
     exit 1
     ;;
+  9832)
+    echo "Error: port 9832 is tidewave-cli, bwrap-sandbox bridges it through tidewave-mcp-filter for Tidewave sessions" >&2
+    exit 1
+    ;;
 esac
 
 # Append to persistent .sandbox/allowed-ports if not already present

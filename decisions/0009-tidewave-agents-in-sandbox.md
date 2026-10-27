@@ -70,6 +70,8 @@ session reports "Tidewave-Web MCP not connected" inside the sandbox.
 
 Amended by decisions/0012, which bridges `:9832` automatically.
 
+Superseded in part by decisions/0019.
+
 ## Consequences
 
 - Threat-model parity with `jean-claude` / `jean-luc`: same persona-scoped

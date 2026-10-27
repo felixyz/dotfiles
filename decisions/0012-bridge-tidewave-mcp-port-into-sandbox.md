@@ -16,3 +16,5 @@ Do not bridge `:9222` (Chrome DevTools) the same way: it gives full control of t
 
 - The app port (typically `:4000`) still needs a `.sandbox/allowed-ports` entry.
 - Amends the "Port bridging stays the user's responsibility" section of decisions/0009 for the MCP port only.
+
+Superseded by decisions/0019, which filters `:9832` instead of bridging it raw.

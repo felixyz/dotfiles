@@ -46,6 +46,11 @@ if [ -z "${BWRAP_PERSONA:-}" ]; then
   esac
 fi
 
+if ! command -v tidewave-mcp-filter >/dev/null; then
+  echo "Error: tidewave-mcp-filter is not on PATH, it bridges the tidewave-cli port" >&2
+  exit 1
+fi
+
 if ! command -v jq >/dev/null; then
   echo "Error: jq is not on PATH, it reads the devenv proxy's routes" >&2
   exit 1
@@ -118,7 +123,7 @@ cleanup() {
     wait "$pid" 2>/dev/null || true
   done
   # The devenv route bridges and those started by bwrap-allow-port are not in PIDS.
-  pkill -f "socat.*$SANDBOX_DIR/" 2>/dev/null || true
+  pkill -f "(socat|tidewave-mcp-filter).*$SANDBOX_DIR/" 2>/dev/null || true
   rm -rf "$SANDBOX_DIR"
 }
 trap cleanup EXIT
@@ -137,7 +142,7 @@ for stale_dir in "$HOME/.cache"/bwrap-sandbox.*/; do
     fi
   fi
   # Squid is gone (or never started) — clean up orphaned socat and stale dir
-  pkill -f "socat.*$stale_dir" 2>/dev/null || true
+  pkill -f "(socat|tidewave-mcp-filter).*$stale_dir" 2>/dev/null || true
   rm -rf "$stale_dir"
 done
 
@@ -274,6 +279,7 @@ PIDS+=($!)
 #      add 9832, the tidewave-cli MCP socket).
 #   2. Per-project .sandbox/allowed-ports (one port per line, # comments).
 # Each bridge: UNIX socket in SANDBOX_DIR -> host localhost:PORT
+TIDEWAVE_PORT=9832
 BRIDGE_PORTS=()
 extra_ports="${BWRAP_EXTRA_PORTS:-}"
 for port in ${extra_ports//,/ }; do
@@ -299,6 +305,12 @@ for port in $(printf '%s\n' ${BRIDGE_PORTS[@]+"${BRIDGE_PORTS[@]}"} | sort -un);
       ;;
   esac
   sock="$SANDBOX_DIR/port-$port.sock"
+  # tidewave-cli serves a file API without authentication on the same port. See decisions/0019.
+  if [ "$port" = "$TIDEWAVE_PORT" ]; then
+    tidewave-mcp-filter "$sock" "$port" "$PROJECT_DIR" &
+    PIDS+=($!)
+    continue
+  fi
   socat "UNIX-LISTEN:${sock},fork" "TCP:127.0.0.1:${port}" 2>/dev/null &
   PIDS+=($!)
 done
@@ -332,7 +344,7 @@ sync_devenv_bridges() {
     fi
   done
   for port in $wanted; do
-    case "$port" in 80 | 443 | "$DEVENV_PROXY_PORT") continue ;; esac
+    case "$port" in 80 | 443 | "$DEVENV_PROXY_PORT" | "$TIDEWAVE_PORT") continue ;; esac
     sock="$SANDBOX_DIR/port-$port.sock"
     [ -S "$sock" ] && continue
     socat "UNIX-LISTEN:${sock},fork" "TCP:127.0.0.1:${port}" 2>/dev/null &

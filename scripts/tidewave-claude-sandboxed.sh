@@ -18,11 +18,9 @@ while [ "$d" != "/" ]; do
   d="$(dirname "$d")"
 done
 export BWRAP_PERSONA=claude
-# Tidewave injects a second MCP server at 127.0.0.1:9832 (tidewave-cli's
-# socket, carrying the browser tools) into every agent it launches, so
-# bridge it unconditionally. NOTE: that port also serves tidewave-cli's
-# unauthenticated host file API (/read, /write, /delete, ...), so this
-# hands the sandboxed agent host-filesystem access as the user. See
-# decisions/0009.
+# Tidewave gives every agent it launches a second MCP server at 127.0.0.1:9832,
+# which carries the browser tools.
+# The same port serves tidewave-cli's file API, which needs no authentication,
+# so bwrap-sandbox bridges it through tidewave-mcp-filter. See decisions/0019.
 export BWRAP_EXTRA_PORTS="${BWRAP_EXTRA_PORTS:-} 9832"
 exec "$HOME/.nix-profile/bin/bwrap-sandbox" "$HOME/.nix-profile/bin/claude" "$@"

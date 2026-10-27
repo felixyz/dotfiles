@@ -166,6 +166,7 @@ in {
     (writeShellScriptBin "bwrap-sandbox" (builtins.readFile ./scripts/bwrap-sandbox.sh))
     (writeShellScriptBin "bwrap-allow-host" (builtins.readFile ./scripts/bwrap-allow-host.sh))
     (writeShellScriptBin "bwrap-allow-port" (builtins.readFile ./scripts/bwrap-allow-port.sh))
+    (writers.writePython3Bin "tidewave-mcp-filter" {flakeIgnore = ["E501"];} (builtins.readFile ./scripts/tidewave-mcp-filter.py))
     (writeShellScriptBin "podman-build" (builtins.readFile ./scripts/podman-build.sh))
     (writeShellScriptBin "tidewave-init" (builtins.readFile ./scripts/tidewave-init.sh))
     (writeShellScriptBin "tidewave-claude-sandboxed" (builtins.readFile ./scripts/tidewave-claude-sandboxed.sh))
