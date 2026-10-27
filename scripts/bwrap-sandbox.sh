@@ -16,6 +16,8 @@
 #
 # A devenv proxy hostname listed exactly in allowed-hosts is reachable inside at http://<name>/,
 # whichever port devenv allocated.
+#
+# Every sandbox can write to /code/shared-docs, for notes that apply across projects.
 
 set -euo pipefail
 
@@ -106,6 +108,12 @@ if [ -f "$PROJECT_DIR/devenv.yaml" ]; then
   grep -v '^strict_ports:' "$DEVENV_LOCAL" | grep -vx '{}' > "$SANDBOX_DIR/devenv.local.yaml" || true
   echo 'strict_ports: false' >> "$SANDBOX_DIR/devenv.local.yaml"
   BWRAP_DEVENV_LOCAL_ARGS+=(--ro-bind "$SANDBOX_DIR/devenv.local.yaml" "$DEVENV_LOCAL")
+fi
+SHARED_DOCS_DIR=/code/shared-docs
+# When /code/shared-docs cannot be created, the sandbox starts without it.
+mkdir -p "$SHARED_DOCS_DIR" 2>/dev/null || true
+if [ ! -d "$SHARED_DOCS_DIR" ]; then
+  echo "Warning: cannot create $SHARED_DOCS_DIR, the sandbox runs without it" >&2
 fi
 PIDS=()
 
@@ -616,6 +624,7 @@ unshare --user --map-current-user --net --keep-caps -- bash -c '
   --ro-bind "$HOME/.config/git" "$HOME/.config/git" \
   --bind "$PROJECT_DIR" "$PROJECT_DIR" \
   --bind "$SANDBOX_DIR/devenv" "$PROJECT_DIR/.devenv" \
+  --bind-try "$SHARED_DOCS_DIR" "$SHARED_DOCS_DIR" \
   ${BWRAP_DEVENV_VENV_ARGS[@]+"${BWRAP_DEVENV_VENV_ARGS[@]}"} \
   ${BWRAP_DEVENV_LOCAL_ARGS[@]+"${BWRAP_DEVENV_LOCAL_ARGS[@]}"} \
   ${CLAUDE_DIR_ARGS[@]+"${CLAUDE_DIR_ARGS[@]}"} \
