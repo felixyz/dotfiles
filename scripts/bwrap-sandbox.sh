@@ -26,7 +26,7 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-# The stale-session sweep below cannot see the enclosing session's squid
+# The stale-session sweep below cannot see the enclosing session's script
 # from inside its PID namespace, so a nested run kills that session's socat bridges.
 if [ -n "${BWRAP_SANDBOX_DIR:-}" ]; then
   echo "Error: already inside a bwrap sandbox ($BWRAP_SANDBOX_DIR)" >&2
@@ -85,6 +85,7 @@ PROJECT_ALLOWLIST="$PROJECT_DIR/.sandbox/allowed-hosts"
 # path components on this system.
 PROJECT_DIR_TAG="${PROJECT_DIR//\//=}"
 SANDBOX_DIR=$(mktemp -d --tmpdir="$HOME/.cache" "bwrap-sandbox.${PROJECT_DIR_TAG}.XXXXXX")
+echo $$ > "$SANDBOX_DIR/owner.pid"
 # The sandbox gets its own .devenv, so Postgres runs initdb on an empty state dir.
 # It also keeps the host's eval cache intact, which holds a single entry that a sandbox's config would replace.
 # The host's venv is bind-mounted back in to avoid re-downloading packages.
@@ -154,21 +155,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Clean up orphaned processes from previous sessions that didn't exit cleanly.
-# Only remove dirs where the squid process is no longer running (truly orphaned).
-# Active sessions (squid still running) are left alone.
+# squid.pid is written after this sweep, so a session starting alongside this one has only owner.pid.
+# A dir under a minute old may be between mktemp and writing owner.pid.
 for stale_dir in "$HOME/.cache"/bwrap-sandbox.*/; do
   [ -d "$stale_dir" ] || continue
   [ "$stale_dir" = "$SANDBOX_DIR/" ] && continue
-  stale_pid_file="$stale_dir/squid.pid"
-  if [ -f "$stale_pid_file" ]; then
-    stale_pid=$(cat "$stale_pid_file" 2>/dev/null)
-    if [ -n "$stale_pid" ] && kill -0 "$stale_pid" 2>/dev/null; then
-      continue  # squid still running — this is an active session, leave it alone
-    fi
+  [ -n "$(find "$stale_dir" -maxdepth 0 -mmin -1 2>/dev/null)" ] && continue
+  stale_pid=$(cat "$stale_dir/owner.pid" 2>/dev/null || true)
+  if [ -n "$stale_pid" ] && kill -0 "$stale_pid" 2>/dev/null; then
+    continue
   fi
-  # Squid is gone (or never started) — clean up orphaned socat and stale dir
-  pkill -f "(socat|tidewave-mcp-filter).*$stale_dir" 2>/dev/null || true
+  pkill -f "(squid|socat|tidewave-mcp-filter).*$stale_dir" 2>/dev/null || true
   rm -rf "$stale_dir"
 done
 
